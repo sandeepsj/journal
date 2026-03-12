@@ -14,11 +14,9 @@ export async function POST() {
 
   await connectDB()
 
-  // Find entries with missing or empty embeddings
-  const entries = await JournalEntry.find({
-    userId,
-    $or: [{ embedding: { $exists: false } }, { embedding: { $size: 0 } }],
-  }).select('_id title body')
+  // Find ALL entries for this user — force re-embed everything
+  // (needed when switching embedding providers/dimensions)
+  const entries = await JournalEntry.find({ userId }).select('_id title body embedding')
 
   console.log(`[reembed] found ${entries.length} entries needing re-embedding`)
 
