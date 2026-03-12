@@ -108,6 +108,13 @@ body {
   border-radius: 4px;
 }
 
+/* Editor inputs should never show a focus ring — the caret is enough */
+.ruled-paper input:focus-visible,
+.ruled-paper textarea:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
 /* ── Scrollbar (subtle) ────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -140,4 +147,8 @@ body {
 .ruled-text {
   line-height: var(--rule-h);
   padding-left: calc(var(--rule-margin) + 1.25rem);
+  padding-right: 1.5rem;
+  padding-top: 0;
+  /* First line sits on the first ruled line */
+  vertical-align: top;
 }
