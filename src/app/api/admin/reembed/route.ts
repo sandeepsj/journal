@@ -2,9 +2,9 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth/options'
 import { connectDB } from '@/lib/db/client'
 import { JournalEntry } from '@/lib/db/models/JournalEntry'
-import { generateEmbedding, buildEmbeddingInput } from '@/lib/embeddings/generate'
+import { storeChunksForEntry } from '@/lib/embeddings/storeChunks'
 
-// POST /api/admin/reembed — re-embed all entries for the current user that have empty embeddings
+// POST /api/admin/reembed — re-chunk and re-embed all entries for the current user
 export async function POST() {
   const session = await auth()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -14,14 +14,11 @@ export async function POST() {
 
   await connectDB()
 
-  // Find ALL entries for this user — force re-embed everything
-  // (needed when switching embedding providers/dimensions)
-  const entries = await JournalEntry.find({ userId }).select('_id title body embedding')
-
-  console.log(`[reembed] found ${entries.length} entries needing re-embedding`)
+  const entries = await JournalEntry.find({ userId }).select('_id title body')
+  console.log(`[reembed] found ${entries.length} entries`)
 
   if (entries.length === 0) {
-    return NextResponse.json({ message: 'All entries already have embeddings', count: 0 })
+    return NextResponse.json({ message: 'No entries found', count: 0 })
   }
 
   const results: { id: string; status: 'ok' | 'error'; error?: string }[] = []
@@ -29,9 +26,8 @@ export async function POST() {
   for (const entry of entries) {
     const id = String(entry._id)
     try {
-      const embedding = await generateEmbedding(buildEmbeddingInput(entry.title, entry.body))
-      await JournalEntry.findByIdAndUpdate(id, { embedding })
-      console.log(`[reembed] ✓ ${id} dims=${embedding.length}`)
+      await storeChunksForEntry(id, userId, entry.title, entry.body)
+      console.log(`[reembed] ✓ ${id}`)
       results.push({ id, status: 'ok' })
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)

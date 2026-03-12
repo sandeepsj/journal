@@ -3,7 +3,7 @@ import { auth } from '@/lib/auth/options'
 import { connectDB } from '@/lib/db/client'
 import { JournalEntry } from '@/lib/db/models/JournalEntry'
 import { createJournalSchema } from '@/lib/validations/journal'
-import { generateEmbedding, buildEmbeddingInput } from '@/lib/embeddings/generate'
+import { storeChunksForEntry } from '@/lib/embeddings/storeChunks'
 import type { JournalEntryListItem } from '@/types/journal'
 import type { IJournalEntry } from '@/lib/db/models/JournalEntry'
 
@@ -88,18 +88,14 @@ export async function POST(request: Request) {
       body: entryBody,
       mood: mood ?? null,
       wordCount,
-      embedding: [],
     })
 
     const entryId = String(entry._id)
     console.log(`[POST /api/journal] created entryId=${entryId} title="${title}" wordCount=${wordCount}`)
 
-    generateEmbedding(buildEmbeddingInput(title, entryBody))
-      .then((embedding) => {
-        console.log(`[embedding] stored for entryId=${entryId} dims=${embedding.length}`)
-        return JournalEntry.findByIdAndUpdate(entryId, { embedding })
-      })
-      .catch((err) => console.error('[embedding] failed for', entryId, err))
+    // Store chunks async — non-blocking
+    storeChunksForEntry(entryId, session.user.id, title, entryBody)
+      .catch((err) => console.error('[chunks] async store failed for', entryId, err))
 
     return NextResponse.json({ id: entryId }, { status: 201 })
   } catch (err) {
