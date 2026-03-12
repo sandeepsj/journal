@@ -14,139 +14,151 @@ function getAnthropic() {
 // POST /api/recall — RAG query against user's journal entries
 export async function POST(request: Request) {
   try {
-  const session = await auth()
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const session = await auth()
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const body = await request.json()
-  const parsed = recallQuerySchema.safeParse(body)
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
-  }
+    const userId = session.user.id
+    console.log(`[recall] start userId=${userId}`)
 
-  const { query } = parsed.data
+    const body = await request.json()
+    const parsed = recallQuerySchema.safeParse(body)
+    if (!parsed.success) {
+      console.warn('[recall] validation failed:', parsed.error.flatten())
+      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
+    }
 
-  await connectDB()
+    const { query } = parsed.data
+    console.log(`[recall] query="${query.slice(0, 80)}"`)
 
-  // 1. Embed the query
-  const queryEmbedding = await generateEmbedding(query)
+    await connectDB()
+    console.log('[recall] db connected')
 
-  const userObjectId = new mongoose.Types.ObjectId(session.user.id)
+    // 1. Embed the query
+    console.log('[recall] generating query embedding...')
+    const queryEmbedding = await generateEmbedding(query)
+    console.log(`[recall] embedding generated dims=${queryEmbedding.length}`)
 
-  // 2. Vector search — top 5 entries for this user
-  // Note: Requires MongoDB Atlas Vector Search index named "journal_embedding_index"
-  // The index must have a filter field defined for "userId" (token type)
-  const pipeline = [
-    {
-      $vectorSearch: {
-        index: 'journal_embedding_index',
-        path: 'embedding',
-        queryVector: queryEmbedding,
-        numCandidates: 50,
-        limit: 20,
-        // filter omitted here — we post-filter below to avoid Atlas index config requirements
+    const userObjectId = new mongoose.Types.ObjectId(userId)
+
+    // 2. Vector search — top 20, post-filter by userId to avoid Atlas filter index requirement
+    console.log('[recall] running $vectorSearch pipeline...')
+    const pipeline = [
+      {
+        $vectorSearch: {
+          index: 'journal_embedding_index',
+          path: 'embedding',
+          queryVector: queryEmbedding,
+          numCandidates: 50,
+          limit: 20,
+        },
       },
-    },
-    {
-      $project: {
-        _id: 1,
-        userId: 1,
-        title: 1,
-        body: 1,
-        mood: 1,
-        createdAt: 1,
-        score: { $meta: 'vectorSearchScore' },
+      {
+        $project: {
+          _id: 1,
+          userId: 1,
+          title: 1,
+          body: 1,
+          mood: 1,
+          createdAt: 1,
+          score: { $meta: 'vectorSearchScore' },
+        },
       },
-    },
-  ]
+    ]
 
-  const allResults = await JournalEntry.aggregate(pipeline)
-  // Post-filter by userId (avoids needing Atlas filter index config)
-  const retrieved = allResults
-    .filter((e) => String(e.userId) === String(userObjectId))
-    .slice(0, 5)
+    const allResults = await JournalEntry.aggregate(pipeline)
+    console.log(`[recall] vectorSearch returned ${allResults.length} results (before user filter)`)
 
-  if (retrieved.length === 0) {
-    return NextResponse.json({
-      answer: "You don't have enough journal entries yet for me to recall from. Start writing and come back!",
-      citations: [],
-    })
-  }
+    const retrieved = allResults
+      .filter((e) => String(e.userId) === String(userObjectId))
+      .slice(0, 5)
+    console.log(`[recall] ${retrieved.length} results after userId filter`)
 
-  // 3. Build prompt from retrieved entries
-  const context = retrieved
-    .map((e, i) => {
-      const date = new Date(e.createdAt).toLocaleDateString('en-US', {
-        year: 'numeric', month: 'long', day: 'numeric',
+    if (retrieved.length === 0) {
+      console.log('[recall] no entries found — returning empty response')
+      return NextResponse.json({
+        answer: "You don't have enough journal entries yet for me to recall from. Start writing and come back!",
+        citations: [],
       })
-      return `[Entry ${i + 1} — ${date}]\nTitle: ${e.title}\n\n${e.body}`
-    })
-    .join('\n\n---\n\n')
+    }
 
-  // 4. Stream Claude response
-  const stream = await getAnthropic().messages.stream({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 1024,
-    system: `You are a thoughtful journaling companion with access to a person's past journal entries.
+    // 3. Build prompt from retrieved entries
+    const context = retrieved
+      .map((e, i) => {
+        const date = new Date(e.createdAt).toLocaleDateString('en-US', {
+          year: 'numeric', month: 'long', day: 'numeric',
+        })
+        return `[Entry ${i + 1} — ${date}]\nTitle: ${e.title}\n\n${e.body}`
+      })
+      .join('\n\n---\n\n')
+
+    // 4. Stream Claude response
+    console.log('[recall] starting Claude stream...')
+    const stream = await getAnthropic().messages.stream({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1024,
+      system: `You are a thoughtful journaling companion with access to a person's past journal entries.
 Answer their question based strictly on what they have written. Be warm, reflective, and grounded in their actual words.
 Do not invent or speculate beyond what the entries contain. If the entries don't answer the question, say so honestly.`,
-    messages: [
-      {
-        role: 'user',
-        content: `Here are relevant past journal entries:\n\n${context}\n\n---\n\nMy question: ${query}`,
-      },
-    ],
-  })
+      messages: [
+        {
+          role: 'user',
+          content: `Here are relevant past journal entries:\n\n${context}\n\n---\n\nMy question: ${query}`,
+        },
+      ],
+    })
+    console.log('[recall] Claude stream opened, returning SSE response')
 
-  // Return streaming response
-  const encoder = new TextEncoder()
-  const citations = retrieved.map((e) => ({
-    id: String(e._id),
-    title: e.title,
-    excerpt: (e.body as string).slice(0, 120),
-    createdAt: new Date(e.createdAt).toISOString(),
-    mood: e.mood ?? null,
-  }))
+    const encoder = new TextEncoder()
+    const citations = retrieved.map((e) => ({
+      id: String(e._id),
+      title: e.title,
+      excerpt: (e.body as string).slice(0, 120),
+      createdAt: new Date(e.createdAt).toISOString(),
+      mood: e.mood ?? null,
+    }))
 
-  const readable = new ReadableStream({
-    async start(controller) {
-      try {
-        // First chunk: citations metadata
-        controller.enqueue(
-          encoder.encode(`data: ${JSON.stringify({ type: 'citations', citations })}\n\n`)
-        )
+    const readable = new ReadableStream({
+      async start(controller) {
+        try {
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({ type: 'citations', citations })}\n\n`)
+          )
 
-        for await (const chunk of stream) {
-          if (
-            chunk.type === 'content_block_delta' &&
-            chunk.delta.type === 'text_delta'
-          ) {
-            controller.enqueue(
-              encoder.encode(`data: ${JSON.stringify({ type: 'text', text: chunk.delta.text })}\n\n`)
-            )
+          let chunkCount = 0
+          for await (const chunk of stream) {
+            if (
+              chunk.type === 'content_block_delta' &&
+              chunk.delta.type === 'text_delta'
+            ) {
+              chunkCount++
+              controller.enqueue(
+                encoder.encode(`data: ${JSON.stringify({ type: 'text', text: chunk.delta.text })}\n\n`)
+              )
+            }
           }
+
+          console.log(`[recall] stream complete chunks=${chunkCount}`)
+          controller.enqueue(encoder.encode('data: [DONE]\n\n'))
+          controller.close()
+        } catch (streamErr) {
+          console.error('[recall] stream error:', streamErr)
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({ type: 'error', message: 'Streaming failed' })}\n\n`)
+          )
+          controller.close()
         }
+      },
+    })
 
-        controller.enqueue(encoder.encode('data: [DONE]\n\n'))
-        controller.close()
-      } catch (streamErr) {
-        console.error('[recall] stream error:', streamErr)
-        controller.enqueue(
-          encoder.encode(`data: ${JSON.stringify({ type: 'error', message: 'Streaming failed' })}\n\n`)
-        )
-        controller.close()
-      }
-    },
-  })
-
-  return new Response(readable, {
-    headers: {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      Connection: 'keep-alive',
-    },
-  })
+    return new Response(readable, {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        Connection: 'keep-alive',
+      },
+    })
   } catch (err) {
-    console.error('[recall] error:', err)
+    console.error('[recall] fatal error:', err instanceof Error ? err.message : err)
     return NextResponse.json(
       { error: err instanceof Error ? err.message : 'Internal server error' },
       { status: 500 }

@@ -19,36 +19,45 @@ export async function GET(request: Request) {
   const search = searchParams.get('search')?.trim() ?? ''
   const skip = (page - 1) * PAGE_SIZE
 
-  await connectDB()
+  console.log(`[GET /api/journal] userId=${session.user.id} page=${page} search="${search}"`)
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const filter: Record<string, any> = { userId: session.user.id }
-  if (search) filter.$text = { $search: search }
+  try {
+    await connectDB()
 
-  const [rawEntries, total] = await Promise.all([
-    JournalEntry.find(filter)
-      .select('title mood wordCount body createdAt updatedAt')
-      .sort(search ? { score: { $meta: 'textScore' } } : { createdAt: -1 })
-      .skip(skip)
-      .limit(PAGE_SIZE)
-      .lean(),
-    JournalEntry.countDocuments(filter),
-  ])
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const filter: Record<string, any> = { userId: session.user.id }
+    if (search) filter.$text = { $search: search }
 
-  const entries: JournalEntryListItem[] = rawEntries.map((e) => ({
-    id: String(e._id),
-    title: e.title,
-    mood: e.mood,
-    wordCount: e.wordCount,
-    excerpt: (e.body ?? '').slice(0, 120),
-    createdAt: e.createdAt.toISOString(),
-    updatedAt: e.updatedAt.toISOString(),
-  }))
+    const [rawEntries, total] = await Promise.all([
+      JournalEntry.find(filter)
+        .select('title mood wordCount body createdAt updatedAt')
+        .sort(search ? { score: { $meta: 'textScore' } } : { createdAt: -1 })
+        .skip(skip)
+        .limit(PAGE_SIZE)
+        .lean(),
+      JournalEntry.countDocuments(filter),
+    ])
 
-  return NextResponse.json({
-    entries,
-    pagination: { page, pageSize: PAGE_SIZE, total, pages: Math.ceil(total / PAGE_SIZE) },
-  })
+    console.log(`[GET /api/journal] found ${rawEntries.length} entries (total=${total})`)
+
+    const entries: JournalEntryListItem[] = rawEntries.map((e) => ({
+      id: String(e._id),
+      title: e.title,
+      mood: e.mood,
+      wordCount: e.wordCount,
+      excerpt: (e.body ?? '').slice(0, 120),
+      createdAt: e.createdAt.toISOString(),
+      updatedAt: e.updatedAt.toISOString(),
+    }))
+
+    return NextResponse.json({
+      entries,
+      pagination: { page, pageSize: PAGE_SIZE, total, pages: Math.ceil(total / PAGE_SIZE) },
+    })
+  } catch (err) {
+    console.error('[GET /api/journal] error:', err)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
 }
 
 // POST /api/journal — create entry and generate embedding async
@@ -56,32 +65,45 @@ export async function POST(request: Request) {
   const session = await auth()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const body = await request.json()
-  const parsed = createJournalSchema.safeParse(body)
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
+  console.log(`[POST /api/journal] userId=${session.user.id}`)
+
+  try {
+    const body = await request.json()
+    const parsed = createJournalSchema.safeParse(body)
+    if (!parsed.success) {
+      console.warn('[POST /api/journal] validation failed:', parsed.error.flatten())
+      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
+    }
+
+    const { title: rawTitle, body: entryBody, mood } = parsed.data
+    const title = rawTitle?.trim() ||
+      new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+    const wordCount = entryBody.trim().split(/\s+/).filter(Boolean).length
+
+    await connectDB()
+
+    const entry = await JournalEntry.create({
+      userId: session.user.id,
+      title,
+      body: entryBody,
+      mood: mood ?? null,
+      wordCount,
+      embedding: [],
+    })
+
+    const entryId = String(entry._id)
+    console.log(`[POST /api/journal] created entryId=${entryId} title="${title}" wordCount=${wordCount}`)
+
+    generateEmbedding(buildEmbeddingInput(title, entryBody))
+      .then((embedding) => {
+        console.log(`[embedding] stored for entryId=${entryId} dims=${embedding.length}`)
+        return JournalEntry.findByIdAndUpdate(entryId, { embedding })
+      })
+      .catch((err) => console.error('[embedding] failed for', entryId, err))
+
+    return NextResponse.json({ id: entryId }, { status: 201 })
+  } catch (err) {
+    console.error('[POST /api/journal] error:', err)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-
-  const { title: rawTitle, body: entryBody, mood } = parsed.data
-  const title = rawTitle?.trim() ||
-    new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
-  const wordCount = entryBody.trim().split(/\s+/).filter(Boolean).length
-
-  await connectDB()
-
-  const entry = await JournalEntry.create({
-    userId: session.user.id,
-    title,
-    body: entryBody,
-    mood: mood ?? null,
-    wordCount,
-    embedding: [],
-  })
-
-  const entryId = String(entry._id)
-  generateEmbedding(buildEmbeddingInput(title, entryBody))
-    .then((embedding) => JournalEntry.findByIdAndUpdate(entryId, { embedding }))
-    .catch((err) => console.error('[embedding] failed for', entryId, err))
-
-  return NextResponse.json({ id: entryId }, { status: 201 })
 }
