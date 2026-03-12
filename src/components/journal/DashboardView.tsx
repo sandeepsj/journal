@@ -44,8 +44,8 @@ export function DashboardView({ userName }: DashboardViewProps) {
     <div className="max-w-3xl mx-auto px-4 py-8 space-y-8 animate-page-enter">
       {/* Greeting */}
       <div>
-        <h1 className="font-serif text-3xl text-[#2C2825]">{greeting}</h1>
-        <p className="text-sm text-[#B5A99F] mt-1">
+        <h1 className="font-serif text-4xl text-[#2C2825]">{greeting}</h1>
+        <p className="text-base text-[#B5A99F] mt-1">
           {new Date().toLocaleDateString('en-US', {
             weekday: 'long',
             month: 'long',
@@ -60,7 +60,7 @@ export function DashboardView({ userName }: DashboardViewProps) {
       {/* Entry list header */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-medium text-[#8B7D72] uppercase tracking-wide">
+          <h2 className="text-base font-medium text-[#8B7D72] uppercase tracking-wide">
             Your entries
           </h2>
           <Button
@@ -90,7 +90,7 @@ export function DashboardView({ userName }: DashboardViewProps) {
 
       {error && (
         <div className="text-center py-12">
-          <p className="text-sm text-[#C4614E] mb-3">{error}</p>
+          <p className="text-base text-[#C4614E] mb-3">{error}</p>
           <Button variant="ghost" size="sm" onClick={() => window.location.reload()}>
             Try again
           </Button>
@@ -156,7 +156,7 @@ export function DashboardView({ userName }: DashboardViewProps) {
         title="Delete entry"
         size="sm"
       >
-        <p className="text-sm text-[#8B7D72] mb-6">
+        <p className="text-base text-[#8B7D72] mb-6">
           This entry will be permanently deleted. This cannot be undone.
         </p>
         <div className="flex gap-2 justify-end">

@@ -37,11 +37,11 @@ export function Navbar({ userName, userEmail, userImage, onSignOut }: NavbarProp
   }, [])
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[#E8E2D9] bg-[#FAF8F5]/80 backdrop-blur-sm">
+    <header className="sticky top-0 z-40 border-b border-[#E8E2D9] bg-[#FAF8F5]">
       <div className="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
         <Link
           href="/"
-          className="font-serif text-xl text-[#2C2825] hover:text-[#7C9E8A] transition-colors duration-150"
+          className="font-serif text-2xl text-[#2C2825] hover:text-[#7C9E8A] transition-colors duration-150"
         >
           Muse
         </Link>
@@ -63,9 +63,9 @@ export function Navbar({ userName, userEmail, userImage, onSignOut }: NavbarProp
               className="absolute right-0 mt-2 w-52 bg-white border border-[#E8E2D9] rounded-xl shadow-md p-1 animate-fade-in"
             >
               <div className="px-3 py-2 border-b border-[#E8E2D9] mb-1">
-                <p className="text-sm font-medium text-[#2C2825] truncate">{userName}</p>
+                <p className="text-base font-medium text-[#2C2825] truncate">{userName}</p>
                 {userEmail && (
-                  <p className="text-xs text-[#B5A99F] truncate">{userEmail}</p>
+                  <p className="text-sm text-[#B5A99F] truncate">{userEmail}</p>
                 )}
               </div>
 

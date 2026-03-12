@@ -96,7 +96,7 @@ export function JournalEditor({
       onKeyDown={handleKeyDown}
     >
       {/* ── Top bar ─────────────────────────────────────── */}
-      <header className="flex items-center justify-between px-6 py-3 border-b border-[#E8E2D9] bg-[#FAF8F5]/80 backdrop-blur-sm sticky top-0 z-10">
+      <header className="flex items-center justify-between px-6 py-3 border-b border-[#E8E2D9] bg-[#FAF8F5] sticky top-0 z-10">
         <button
           onClick={handleBack}
           className="flex items-center gap-1.5 text-sm text-[#8B7D72] hover:text-[#2C2825] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C9E8A] rounded-md px-1"
@@ -128,7 +128,7 @@ export function JournalEditor({
       {/* ── Editor area ─────────────────────────────────── */}
       <div className="flex-1 max-w-2xl mx-auto w-full px-6 sm:px-8 pt-10 pb-6 animate-page-enter">
         {/* Date */}
-        <p className="text-xs text-[#B5A99F] mb-6 tabular-nums">
+        <p className="text-sm text-[#B5A99F] mb-6 tabular-nums">
           {new Date().toLocaleDateString('en-US', {
             weekday: 'long',
             year: 'numeric',
@@ -143,7 +143,7 @@ export function JournalEditor({
           onChange={(e) => setTitle(e.target.value)}
           placeholder="What's on your mind today?"
           maxLength={300}
-          className="w-full font-serif text-3xl sm:text-4xl bg-transparent border-none outline-none placeholder:text-[#D4CEC8] text-[#2C2825] mb-6 leading-tight caret-[#7C9E8A]"
+          className="w-full font-serif text-4xl sm:text-5xl bg-transparent border-none outline-none placeholder:text-[#D4CEC8] text-[#2C2825] mb-6 leading-tight caret-[#7C9E8A]"
           aria-label="Entry title"
         />
 
@@ -156,7 +156,7 @@ export function JournalEditor({
           value={body}
           onChange={(e) => setBody(e.target.value)}
           placeholder="Your story begins here..."
-          className="w-full font-serif text-lg leading-[1.9] bg-transparent border-none outline-none resize-none placeholder:text-[#D4CEC8] text-[#2C2825]"
+          className="w-full font-serif text-xl leading-[1.9] bg-transparent border-none outline-none resize-none placeholder:text-[#D4CEC8] text-[#2C2825]"
           style={{
             caretColor: '#7C9E8A',
             minHeight: '400px',
@@ -169,7 +169,7 @@ export function JournalEditor({
       </div>
 
       {/* ── Bottom bar ──────────────────────────────────── */}
-      <footer className="sticky bottom-0 flex items-center justify-between px-6 py-3 border-t border-[#E8E2D9] bg-[#FAF8F5]/80 backdrop-blur-sm">
+      <footer className="sticky bottom-0 flex items-center justify-between px-6 py-3 border-t border-[#E8E2D9] bg-[#FAF8F5]">
         <MoodSelector value={mood} onChange={setMood} />
         <WordCount count={wordCount} />
       </footer>

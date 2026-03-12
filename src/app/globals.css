@@ -37,7 +37,10 @@
 
 /* ── Base ──────────────────────────────────────────────────────── */
 body {
-  background: var(--color-bg);
+  background-color: var(--color-bg);
+  /* Subtle warm dot pattern — like journal paper */
+  background-image: radial-gradient(circle, #D4CEC8 1px, transparent 1px);
+  background-size: 24px 24px;
   color: var(--color-text-primary);
   font-family: var(--font-sans);
 }
