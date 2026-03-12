@@ -1,17 +1,19 @@
 import { NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
+import mongoose from 'mongoose'
 import { auth } from '@/lib/auth/options'
-
-function getAnthropic() {
-  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-}
 import { connectDB } from '@/lib/db/client'
 import { JournalEntry } from '@/lib/db/models/JournalEntry'
 import { generateEmbedding } from '@/lib/embeddings/generate'
 import { recallQuerySchema } from '@/lib/validations/journal'
 
+function getAnthropic() {
+  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+}
+
 // POST /api/recall — RAG query against user's journal entries
 export async function POST(request: Request) {
+  try {
   const session = await auth()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -28,8 +30,11 @@ export async function POST(request: Request) {
   // 1. Embed the query
   const queryEmbedding = await generateEmbedding(query)
 
+  const userObjectId = new mongoose.Types.ObjectId(session.user.id)
+
   // 2. Vector search — top 5 entries for this user
   // Note: Requires MongoDB Atlas Vector Search index named "journal_embedding_index"
+  // The index must have a filter field defined for "userId" (token type)
   const pipeline = [
     {
       $vectorSearch: {
@@ -37,13 +42,14 @@ export async function POST(request: Request) {
         path: 'embedding',
         queryVector: queryEmbedding,
         numCandidates: 50,
-        limit: 5,
-        filter: { userId: session.user.id },
+        limit: 20,
+        // filter omitted here — we post-filter below to avoid Atlas index config requirements
       },
     },
     {
       $project: {
         _id: 1,
+        userId: 1,
         title: 1,
         body: 1,
         mood: 1,
@@ -53,7 +59,11 @@ export async function POST(request: Request) {
     },
   ]
 
-  const retrieved = await JournalEntry.aggregate(pipeline)
+  const allResults = await JournalEntry.aggregate(pipeline)
+  // Post-filter by userId (avoids needing Atlas filter index config)
+  const retrieved = allResults
+    .filter((e) => String(e.userId) === String(userObjectId))
+    .slice(0, 5)
 
   if (retrieved.length === 0) {
     return NextResponse.json({
@@ -99,24 +109,32 @@ Do not invent or speculate beyond what the entries contain. If the entries don't
 
   const readable = new ReadableStream({
     async start(controller) {
-      // First chunk: citations metadata
-      controller.enqueue(
-        encoder.encode(`data: ${JSON.stringify({ type: 'citations', citations })}\n\n`)
-      )
+      try {
+        // First chunk: citations metadata
+        controller.enqueue(
+          encoder.encode(`data: ${JSON.stringify({ type: 'citations', citations })}\n\n`)
+        )
 
-      for await (const chunk of stream) {
-        if (
-          chunk.type === 'content_block_delta' &&
-          chunk.delta.type === 'text_delta'
-        ) {
-          controller.enqueue(
-            encoder.encode(`data: ${JSON.stringify({ type: 'text', text: chunk.delta.text })}\n\n`)
-          )
+        for await (const chunk of stream) {
+          if (
+            chunk.type === 'content_block_delta' &&
+            chunk.delta.type === 'text_delta'
+          ) {
+            controller.enqueue(
+              encoder.encode(`data: ${JSON.stringify({ type: 'text', text: chunk.delta.text })}\n\n`)
+            )
+          }
         }
-      }
 
-      controller.enqueue(encoder.encode('data: [DONE]\n\n'))
-      controller.close()
+        controller.enqueue(encoder.encode('data: [DONE]\n\n'))
+        controller.close()
+      } catch (streamErr) {
+        console.error('[recall] stream error:', streamErr)
+        controller.enqueue(
+          encoder.encode(`data: ${JSON.stringify({ type: 'error', message: 'Streaming failed' })}\n\n`)
+        )
+        controller.close()
+      }
     },
   })
 
@@ -127,4 +145,11 @@ Do not invent or speculate beyond what the entries contain. If the entries don't
       Connection: 'keep-alive',
     },
   })
+  } catch (err) {
+    console.error('[recall] error:', err)
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : 'Internal server error' },
+      { status: 500 }
+    )
+  }
 }
