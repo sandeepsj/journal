@@ -41,13 +41,21 @@ export function RecallChatPanel({ sessionId, initialMessages, onSessionCreated, 
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, isStreaming])
 
-  // Sync messages if sessionId changes
+  // Sync messages if sessionId changes, avoiding overwriting local state mid-stream
   useEffect(() => {
     setMessages(initialMessages)
-    setQuery('')
-    setError(null)
     setIsStreaming(false)
-  }, [sessionId, initialMessages])
+  }, [initialMessages])
+
+  // Clear everything when starting a completely new chat
+  useEffect(() => {
+    if (sessionId === null) {
+      setMessages([])
+      setQuery('')
+      setError(null)
+      setIsStreaming(false)
+    }
+  }, [sessionId])
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -101,13 +109,21 @@ export function RecallChatPanel({ sessionId, initialMessages, onSessionCreated, 
             } else if (parsed.type === 'citations') {
               setMessages((prev) => {
                 const newMsgs = [...prev]
-                newMsgs[newMsgs.length - 1].citations = parsed.citations
+                const lastMsg = newMsgs[newMsgs.length - 1]
+                newMsgs[newMsgs.length - 1] = { 
+                  ...lastMsg, 
+                  citations: parsed.citations 
+                }
                 return newMsgs
               })
             } else if (parsed.type === 'text') {
               setMessages((prev) => {
                 const newMsgs = [...prev]
-                newMsgs[newMsgs.length - 1].content += parsed.text
+                const lastMsg = newMsgs[newMsgs.length - 1]
+                newMsgs[newMsgs.length - 1] = {
+                  ...lastMsg,
+                  content: lastMsg.content + parsed.text
+                }
                 return newMsgs
               })
             } else if (parsed.type === 'error') {
@@ -178,7 +194,7 @@ export function RecallChatPanel({ sessionId, initialMessages, onSessionCreated, 
                 <div
                   className={`max-w-[85%] rounded-2xl px-5 py-3.5 ${
                     msg.role === 'user'
-                      ? 'bg-[#2C2825] text-[#F9F8F6] font-medium leading-relaxed'
+                      ? 'bg-[#F2EEE8] text-[#2C2825] font-medium leading-relaxed border border-[#E8E2D9]'
                       : 'bg-transparent text-[#2C2825] leading-relaxed font-serif'
                   }`}
                 >

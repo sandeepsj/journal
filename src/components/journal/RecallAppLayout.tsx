@@ -17,6 +17,7 @@ export function RecallAppLayout({ userName, userEmail, userImage }: RecallAppLay
   const [activeMessages, setActiveMessages] = useState<ChatMessage[]>([])
   const [isMobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [shouldFetchSession, setShouldFetchSession] = useState(false)
 
   const fetchSessions = useCallback(async () => {
     try {
@@ -42,6 +43,8 @@ export function RecallAppLayout({ userName, userEmail, userImage }: RecallAppLay
         setActiveMessages([])
         return
       }
+      if (!shouldFetchSession) return
+
       try {
         const res = await fetch(`/api/recall/sessions/${activeSessionId}`)
         if (res.ok) {
@@ -53,7 +56,7 @@ export function RecallAppLayout({ userName, userEmail, userImage }: RecallAppLay
       }
     }
     loadActiveSession()
-  }, [activeSessionId])
+  }, [activeSessionId, shouldFetchSession])
 
   const handleDeleteSession = async (id: string) => {
     if (!confirm('Are you sure you want to delete this chat?')) return
@@ -74,13 +77,18 @@ export function RecallAppLayout({ userName, userEmail, userImage }: RecallAppLay
     }
   }
 
+  const handleSelectSession = (id: string | null) => {
+    setShouldFetchSession(true)
+    setActiveSessionId(id)
+  }
+
   const handleNewChat = () => {
-    setActiveSessionId(null)
-    setActiveMessages([])
+    handleSelectSession(null)
     setMobileSidebarOpen(false)
   }
 
   const handleSessionCreated = (id: string, title: string) => {
+    setShouldFetchSession(false)
     setActiveSessionId(id)
     setSessions((prev) => [{ _id: id, title, updatedAt: new Date().toISOString() }, ...prev])
   }
@@ -99,7 +107,7 @@ export function RecallAppLayout({ userName, userEmail, userImage }: RecallAppLay
         <ChatSidebar
           sessions={sessions}
           activeSessionId={activeSessionId}
-          onSelectSession={setActiveSessionId}
+          onSelectSession={handleSelectSession}
           onDeleteSession={handleDeleteSession}
           onNewChat={handleNewChat}
           isMobileSidebarOpen={isMobileSidebarOpen}
