@@ -10,6 +10,7 @@ export const updateJournalSchema = createJournalSchema.partial()
 
 export const recallQuerySchema = z.object({
   query: z.string().min(3, 'Query too short').max(500, 'Query too long'),
+  sessionId: z.string().optional(),
 })
 
 export type CreateJournalInput = z.infer<typeof createJournalSchema>

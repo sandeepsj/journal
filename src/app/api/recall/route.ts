@@ -5,6 +5,7 @@ import { auth } from '@/lib/auth/options'
 import { connectDB } from '@/lib/db/client'
 import { JournalChunk } from '@/lib/db/models/JournalChunk'
 import { JournalEntry } from '@/lib/db/models/JournalEntry'
+import { ChatSession } from '@/lib/db/models/ChatSession'
 import { generateEmbedding } from '@/lib/embeddings/generate'
 import { recallQuerySchema } from '@/lib/validations/journal'
 
@@ -28,17 +29,40 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
     }
 
-    const { query } = parsed.data
+    const { query, sessionId } = parsed.data
     console.log(`[recall] query="${query.slice(0, 80)}"`)
 
     await connectDB()
+
+    const userObjectId = new mongoose.Types.ObjectId(userId)
+
+    let chatSession
+    if (sessionId) {
+      chatSession = await ChatSession.findOne({ _id: sessionId, userId: userObjectId })
+      if (!chatSession) {
+        return NextResponse.json({ error: 'Session not found' }, { status: 404 })
+      }
+    } else {
+      // Create new session if none provided
+      chatSession = await ChatSession.create({
+        userId: userObjectId,
+        title: query.slice(0, 40) + (query.length > 40 ? '...' : ''),
+        messages: [],
+      })
+    }
+
+    // Add user message to session
+    chatSession.messages.push({
+      role: 'user',
+      content: query,
+      createdAt: new Date(),
+    })
+    await chatSession.save()
 
     // 1. Embed the query
     console.log('[recall] generating query embedding...')
     const queryEmbedding = await generateEmbedding(query)
     console.log(`[recall] embedding generated dims=${queryEmbedding.length}`)
-
-    const userObjectId = new mongoose.Types.ObjectId(userId)
 
     // 2. Try chunks first; fall back to full entries if journalchunks index not ready
     console.log('[recall] running $vectorSearch...')
@@ -106,26 +130,39 @@ export async function POST(request: Request) {
 
       console.log(`[recall] entry fallback found=${entryResults.length}`)
 
-      if (entryResults.length === 0) {
-        return NextResponse.json({
-          answer: "You don't have enough journal entries yet for me to recall from. Start writing and come back!",
-          citations: [],
-        })
+      // Instead of failing entirely, just use empty context if no entries found.
+      if (entryResults.length > 0) {
+        context = entryResults.map((e, i) => {
+          const date = new Date(e.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+          return `[Entry ${i + 1} — ${date}]\nTitle: ${e.title}\n\n${e.body}`
+        }).join('\n\n---\n\n')
+
+        citations = entryResults.map((e) => ({
+          id: String(e._id),
+          title: e.title,
+          excerpt: (e.body as string).slice(0, 120),
+          createdAt: new Date(e.createdAt).toISOString(),
+          mood: e.mood ?? null,
+        }))
       }
-
-      context = entryResults.map((e, i) => {
-        const date = new Date(e.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
-        return `[Entry ${i + 1} — ${date}]\nTitle: ${e.title}\n\n${e.body}`
-      }).join('\n\n---\n\n')
-
-      citations = entryResults.map((e) => ({
-        id: String(e._id),
-        title: e.title,
-        excerpt: (e.body as string).slice(0, 120),
-        createdAt: new Date(e.createdAt).toISOString(),
-        mood: e.mood ?? null,
-      }))
     }
+
+    // Build chat history for Anthropic
+    const previousMessages = chatSession.messages.slice(0, -1).map((msg: any) => ({
+      role: msg.role === 'assistant' ? 'assistant' as const : 'user' as const,
+      content: msg.content,
+    }))
+
+    // Add exactly one system-like or prompt-enriched message as the final message
+    const userPromptContent = `Here are relevant passages from past journal entries:\n\n${context}\n\n---\n\nMy question: ${query}`
+
+    const messages = [
+      ...previousMessages,
+      {
+        role: 'user' as const,
+        content: userPromptContent,
+      },
+    ]
 
     // 6. Stream Claude response — try models in order, fall back on overload
     const claudeParams = {
@@ -133,12 +170,7 @@ export async function POST(request: Request) {
       system: `You are a thoughtful journaling companion with access to a person's past journal entries.
 Answer their question based strictly on what they have written. Be warm, reflective, and grounded in their actual words.
 Do not invent or speculate beyond what the entries contain. If the entries don't answer the question, say so honestly.`,
-      messages: [
-        {
-          role: 'user' as const,
-          content: `Here are relevant passages from past journal entries:\n\n${context}\n\n---\n\nMy question: ${query}`,
-        },
-      ],
+      messages,
     }
 
     const models = ['claude-sonnet-4-6', 'claude-3-5-sonnet-20241022', 'claude-3-haiku-20240307']
@@ -163,7 +195,13 @@ Do not invent or speculate beyond what the entries contain. If the entries don't
 
     const readable = new ReadableStream({
       async start(controller) {
+        let fullResponseText = ''
+
         try {
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({ type: 'session', sessionId: chatSession._id })}\n\n`)
+          )
+
           controller.enqueue(
             encoder.encode(`data: ${JSON.stringify({ type: 'citations', citations })}\n\n`)
           )
@@ -175,6 +213,7 @@ Do not invent or speculate beyond what the entries contain. If the entries don't
               chunk.delta.type === 'text_delta'
             ) {
               chunkCount++
+              fullResponseText += chunk.delta.text
               controller.enqueue(
                 encoder.encode(`data: ${JSON.stringify({ type: 'text', text: chunk.delta.text })}\n\n`)
               )
@@ -190,6 +229,25 @@ Do not invent or speculate beyond what the entries contain. If the entries don't
             encoder.encode(`data: ${JSON.stringify({ type: 'error', message: 'Streaming failed' })}\n\n`)
           )
           controller.close()
+        } finally {
+          // Save assistant's message in DB
+          try {
+            await ChatSession.updateOne(
+              { _id: chatSession._id },
+              {
+                $push: {
+                  messages: {
+                    role: 'assistant',
+                    content: fullResponseText,
+                    citations,
+                    createdAt: new Date(),
+                  },
+                },
+              }
+            )
+          } catch (err) {
+            console.error('[recall] error saving assistant response:', err)
+          }
         }
       },
     })
