@@ -40,7 +40,7 @@ export function DashboardView({ userName }: DashboardViewProps) {
   const greeting = getGreeting(userName)
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8 pb-28 space-y-8 animate-page-enter">
+    <div className="max-w-5xl mx-auto px-6 py-8 pb-28 space-y-8 animate-page-enter relative">
       {/* Greeting */}
       <div>
         <h1 className="font-serif text-4xl text-[#2C2825]">{greeting}</h1>
@@ -74,7 +74,7 @@ export function DashboardView({ userName }: DashboardViewProps) {
       </button>
 
       {/* Entry list header */}
-      <div className="space-y-3">
+      <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-medium text-[#8B7D72] uppercase tracking-wide">
             Your entries
@@ -122,8 +122,8 @@ export function DashboardView({ userName }: DashboardViewProps) {
 
       {/* Entry grid */}
       {entries.length > 0 && (
-        <div className="space-y-3">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {entries.map((entry) => (
               <JournalCard
                 key={entry.id}
@@ -135,7 +135,7 @@ export function DashboardView({ userName }: DashboardViewProps) {
           </div>
 
           {hasMore && (
-            <div className="flex justify-center pt-4">
+            <div className="flex justify-center pt-6">
               <Button variant="ghost" size="sm" onClick={loadMore} loading={isLoading}>
                 Load more
               </Button>
@@ -165,7 +165,7 @@ export function DashboardView({ userName }: DashboardViewProps) {
       <button
         onClick={() => router.push('/journal/new')}
         aria-label="New journal entry"
-        className="fixed bottom-8 right-8 w-14 h-14 rounded-full bg-[#7C9E8A] text-white shadow-lg hover:bg-[#6A9B77] hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-150 flex items-center justify-center z-30"
+        className="fixed bottom-8 right-8 md:bottom-12 md:right-12 xl:right-16 w-14 h-14 rounded-full bg-[#7C9E8A] text-white shadow-lg hover:bg-[#6A9B77] hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-150 flex items-center justify-center z-30"
       >
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <path d="M12 5v14M5 12h14" />

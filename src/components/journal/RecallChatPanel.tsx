@@ -194,7 +194,7 @@ export function RecallChatPanel({ sessionId, initialMessages, onSessionCreated, 
                 <div
                   className={`max-w-[85%] rounded-2xl px-5 py-3.5 ${
                     msg.role === 'user'
-                      ? 'bg-[#F2EEE8] text-[#2C2825] font-medium leading-relaxed border border-[#E8E2D9]'
+                      ? 'bg-white text-[#2C2825] font-medium leading-relaxed shadow-sm border border-[#E8E2D9]'
                       : 'bg-transparent text-[#2C2825] leading-relaxed font-serif'
                   }`}
                 >
