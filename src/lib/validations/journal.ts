@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 export const createJournalSchema = z.object({
-  title: z.string().min(1, 'Title is required').max(300, 'Title too long'),
+  title: z.string().max(300, 'Title too long').optional().default(''),
   body: z.string().min(1, 'Entry cannot be empty').max(50000, 'Entry too long'),
   mood: z.enum(['calm', 'happy', 'anxious', 'sad', 'grateful']).nullable().optional(),
 })
