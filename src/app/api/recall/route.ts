@@ -88,7 +88,6 @@ export async function POST(request: Request) {
 
     // 4. Stream Claude response — retry up to 3 times on overload
     const claudeParams = {
-      model: 'claude-sonnet-4-6' as const,
       max_tokens: 1024,
       system: `You are a thoughtful journaling companion with access to a person's past journal entries.
 Answer their question based strictly on what they have written. Be warm, reflective, and grounded in their actual words.
@@ -101,19 +100,20 @@ Do not invent or speculate beyond what the entries contain. If the entries don't
       ],
     }
 
+    // Try preferred model, fall back to haiku if overloaded
+    const models = ['claude-sonnet-4-6', 'claude-3-5-sonnet-20241022', 'claude-3-haiku-20240307']
     let stream
-    for (let attempt = 1; attempt <= 3; attempt++) {
+    for (const model of models) {
       try {
-        console.log(`[recall] starting Claude stream (attempt ${attempt})...`)
-        stream = await getAnthropic().messages.stream(claudeParams)
+        console.log(`[recall] trying model=${model}`)
+        stream = await getAnthropic().messages.stream({ ...claudeParams, model })
+        console.log(`[recall] stream opened with model=${model}`)
         break
       } catch (err: unknown) {
         const isOverloaded =
           err instanceof Error && err.message.includes('overloaded_error')
-        if (isOverloaded && attempt < 3) {
-          const delay = attempt * 2000
-          console.warn(`[recall] Claude overloaded, retrying in ${delay}ms...`)
-          await new Promise((r) => setTimeout(r, delay))
+        if (isOverloaded) {
+          console.warn(`[recall] model=${model} overloaded, trying next...`)
         } else {
           throw err
         }

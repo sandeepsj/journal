@@ -67,6 +67,8 @@ export function RecallPanel() {
               setCitations(parsed.citations)
             } else if (parsed.type === 'text') {
               setAnswer((prev) => prev + parsed.text)
+            } else if (parsed.type === 'error') {
+              setError('AI is busy right now, please try again in a moment.')
             }
           } catch {
             // ignore malformed chunks
