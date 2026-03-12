@@ -41,7 +41,15 @@ export function ChatSidebar({
           isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
       >
-        <div className="p-4 flex items-center justify-between">
+        <div className="px-4 pt-4 pb-0">
+          <a href="/" className="inline-flex items-center gap-1.5 text-[#847B73] hover:text-[#2C2825] transition-colors text-sm font-medium mb-3">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
+            Dashboard
+          </a>
+        </div>
+        <div className="px-4 pb-4 flex items-center justify-between">
           <h2 className="font-serif text-xl tracking-wide text-[#2C2825] flex items-center gap-2">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[#B5A99F]">
               <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z" />

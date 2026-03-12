@@ -107,16 +107,6 @@ export function RecallAppLayout({ userName, userEmail, userImage }: RecallAppLay
         />
         
         <main className="flex-1 flex flex-col min-w-0 h-full relative">
-           {/* Custom absolute button to go back to journal dashboard */}
-          <div className="hidden md:flex absolute top-3 left-4 z-20 items-center">
-            <a href="/dashboard" className="flex items-center gap-1 text-[#847B73] hover:text-[#2C2825] transition-colors text-sm font-medium">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M19 12H5M12 19l-7-7 7-7" />
-              </svg>
-              Dashboard
-            </a>
-          </div>
-
           <RecallChatPanel
             sessionId={activeSessionId}
             initialMessages={activeMessages}
