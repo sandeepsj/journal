@@ -40,8 +40,11 @@ export async function POST(request: Request) {
 
     const userObjectId = new mongoose.Types.ObjectId(userId)
 
-    // 2. Vector search against chunks (not entries)
-    console.log('[recall] running $vectorSearch on journalchunks...')
+    // 2. Try chunks first; fall back to full entries if journalchunks index not ready
+    console.log('[recall] running $vectorSearch...')
+    let context = ''
+    let citations: { id: string; title: string; excerpt: string; createdAt: string; mood: string | null }[] = []
+
     const chunkResults = await JournalChunk.aggregate([
       {
         $vectorSearch: {
@@ -53,66 +56,76 @@ export async function POST(request: Request) {
           filter: { userId: userObjectId },
         },
       },
-      {
-        $project: {
-          _id: 1,
-          entryId: 1,
-          chunkIndex: 1,
-          text: 1,
-          score: { $meta: 'vectorSearchScore' },
-        },
-      },
-    ])
-    console.log(`[recall] vectorSearch returned ${chunkResults.length} chunks`)
+      { $project: { _id: 1, entryId: 1, chunkIndex: 1, text: 1, score: { $meta: 'vectorSearchScore' } } },
+    ]).catch(() => [])  // if index doesn't exist yet, return empty
 
-    if (chunkResults.length === 0) {
-      console.log('[recall] no chunks found — returning empty response')
-      return NextResponse.json({
-        answer: "You don't have enough journal entries yet for me to recall from. Start writing and come back!",
-        citations: [],
-      })
-    }
+    console.log(`[recall] chunks found=${chunkResults.length}`)
 
-    // 3. Deduplicate by entryId — keep highest-scoring chunk per entry, preserve up to 5 entries
-    const seenEntries = new Map<string, { chunk: typeof chunkResults[0]; score: number }>()
-    for (const chunk of chunkResults) {
-      const eid = String(chunk.entryId)
-      if (!seenEntries.has(eid) || chunk.score > seenEntries.get(eid)!.score) {
-        seenEntries.set(eid, { chunk, score: chunk.score })
+    if (chunkResults.length > 0) {
+      // Deduplicate by entryId
+      const seenEntries = new Map<string, number>()
+      for (const c of chunkResults) {
+        const eid = String(c.entryId)
+        if (!seenEntries.has(eid)) seenEntries.set(eid, c.score)
       }
-    }
-    const topEntryIds = [...seenEntries.keys()].slice(0, 5)
-    console.log(`[recall] ${topEntryIds.length} unique entries matched`)
+      const topEntryIds = [...seenEntries.keys()].slice(0, 5)
 
-    // 4. Fetch full entry metadata for citations
-    const entries = await JournalEntry.find({ _id: { $in: topEntryIds } })
-      .select('_id title body mood createdAt')
-      .lean()
+      const entries = await JournalEntry.find({ _id: { $in: topEntryIds } })
+        .select('_id title body mood createdAt').lean()
+      const entryMap = new Map(entries.map((e) => [String(e._id), e]))
 
-    const entryMap = new Map(entries.map((e) => [String(e._id), e]))
-
-    // 5. Build context from best-matching chunks (preserves the relevant passage, not full body)
-    const context = chunkResults
-      .filter((c, idx, arr) => {
-        // Keep all chunks from top entries, deduplicated by entryId+chunkIndex
-        const key = `${c.entryId}-${c.chunkIndex}`
-        return (
-          topEntryIds.includes(String(c.entryId)) &&
-          arr.findIndex((x) => `${x.entryId}-${x.chunkIndex}` === key) === idx
-        )
-      })
-      .slice(0, 8)
-      .map((c) => {
+      context = chunkResults.slice(0, 8).map((c) => {
         const entry = entryMap.get(String(c.entryId))
-        const date = entry
-          ? new Date(entry.createdAt).toLocaleDateString('en-US', {
-              year: 'numeric', month: 'long', day: 'numeric',
-            })
-          : 'Unknown date'
-        const title = entry?.title ?? 'Untitled'
-        return `[${title} — ${date}]\n${c.text}`
-      })
-      .join('\n\n---\n\n')
+        const date = entry ? new Date(entry.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : ''
+        return `[${entry?.title ?? 'Entry'} — ${date}]\n${c.text}`
+      }).join('\n\n---\n\n')
+
+      citations = topEntryIds.map((eid) => entryMap.get(eid)).filter(Boolean).map((e) => ({
+        id: String(e!._id),
+        title: e!.title,
+        excerpt: (e!.body as string).slice(0, 120),
+        createdAt: new Date(e!.createdAt).toISOString(),
+        mood: e!.mood ?? null,
+      }))
+    } else {
+      // Fallback: search journalentries directly
+      console.log('[recall] falling back to journalentries search')
+      const entryResults = await JournalEntry.aggregate([
+        {
+          $vectorSearch: {
+            index: 'vector_index',
+            path: 'embedding',
+            queryVector: queryEmbedding,
+            numCandidates: 50,
+            limit: 5,
+            filter: { userId: userObjectId },
+          },
+        },
+        { $project: { _id: 1, title: 1, body: 1, mood: 1, createdAt: 1, score: { $meta: 'vectorSearchScore' } } },
+      ])
+
+      console.log(`[recall] entry fallback found=${entryResults.length}`)
+
+      if (entryResults.length === 0) {
+        return NextResponse.json({
+          answer: "You don't have enough journal entries yet for me to recall from. Start writing and come back!",
+          citations: [],
+        })
+      }
+
+      context = entryResults.map((e, i) => {
+        const date = new Date(e.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+        return `[Entry ${i + 1} — ${date}]\nTitle: ${e.title}\n\n${e.body}`
+      }).join('\n\n---\n\n')
+
+      citations = entryResults.map((e) => ({
+        id: String(e._id),
+        title: e.title,
+        excerpt: (e.body as string).slice(0, 120),
+        createdAt: new Date(e.createdAt).toISOString(),
+        mood: e.mood ?? null,
+      }))
+    }
 
     // 6. Stream Claude response — try models in order, fall back on overload
     const claudeParams = {
@@ -147,16 +160,6 @@ Do not invent or speculate beyond what the entries contain. If the entries don't
     }
 
     const encoder = new TextEncoder()
-    const citations = topEntryIds
-      .map((eid) => entryMap.get(eid))
-      .filter(Boolean)
-      .map((e) => ({
-        id: String(e!._id),
-        title: e!.title,
-        excerpt: (e!.body as string).slice(0, 120),
-        createdAt: new Date(e!.createdAt).toISOString(),
-        mood: e!.mood ?? null,
-      }))
 
     const readable = new ReadableStream({
       async start(controller) {
