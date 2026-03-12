@@ -86,21 +86,39 @@ export async function POST(request: Request) {
       })
       .join('\n\n---\n\n')
 
-    // 4. Stream Claude response
-    console.log('[recall] starting Claude stream...')
-    const stream = await getAnthropic().messages.stream({
-      model: 'claude-sonnet-4-6',
+    // 4. Stream Claude response — retry up to 3 times on overload
+    const claudeParams = {
+      model: 'claude-sonnet-4-6' as const,
       max_tokens: 1024,
       system: `You are a thoughtful journaling companion with access to a person's past journal entries.
 Answer their question based strictly on what they have written. Be warm, reflective, and grounded in their actual words.
 Do not invent or speculate beyond what the entries contain. If the entries don't answer the question, say so honestly.`,
       messages: [
         {
-          role: 'user',
+          role: 'user' as const,
           content: `Here are relevant past journal entries:\n\n${context}\n\n---\n\nMy question: ${query}`,
         },
       ],
-    })
+    }
+
+    let stream
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        console.log(`[recall] starting Claude stream (attempt ${attempt})...`)
+        stream = await getAnthropic().messages.stream(claudeParams)
+        break
+      } catch (err: unknown) {
+        const isOverloaded =
+          err instanceof Error && err.message.includes('overloaded_error')
+        if (isOverloaded && attempt < 3) {
+          const delay = attempt * 2000
+          console.warn(`[recall] Claude overloaded, retrying in ${delay}ms...`)
+          await new Promise((r) => setTimeout(r, delay))
+        } else {
+          throw err
+        }
+      }
+    }
     console.log('[recall] Claude stream opened, returning SSE response')
 
     const encoder = new TextEncoder()
@@ -120,7 +138,7 @@ Do not invent or speculate beyond what the entries contain. If the entries don't
           )
 
           let chunkCount = 0
-          for await (const chunk of stream) {
+          for await (const chunk of stream!) {
             if (
               chunk.type === 'content_block_delta' &&
               chunk.delta.type === 'text_delta'
