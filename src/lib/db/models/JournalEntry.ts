@@ -9,7 +9,7 @@ export interface IJournalEntry {
   body: string
   mood: Mood | null
   wordCount: number
-  embedding: number[]  // 1536-dim from text-embedding-3-small
+  embedding: number[]  // 1024-dim from voyage-3
   createdAt: Date
   updatedAt: Date
 }
