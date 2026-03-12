@@ -45,7 +45,7 @@ export async function POST(request: Request) {
     const pipeline = [
       {
         $vectorSearch: {
-          index: 'journal_embedding_index',
+          index: 'vector_index',
           path: 'embedding',
           queryVector: queryEmbedding,
           numCandidates: 50,
