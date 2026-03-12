@@ -33,7 +33,7 @@ export function JournalEditor({
 
   const wordCount = useWordCount(body)
 
-  // Auto-resize textarea to fit content
+  // Auto-resize textarea — must stay in sync with ruled lines
   useEffect(() => {
     const el = bodyRef.current
     if (!el) return
@@ -41,7 +41,6 @@ export function JournalEditor({
     el.style.height = `${el.scrollHeight}px`
   }, [body])
 
-  // Focus body on mount for new entries
   useEffect(() => {
     if (!entryId) bodyRef.current?.focus()
   }, [entryId])
@@ -76,7 +75,6 @@ export function JournalEditor({
     interval: 30000,
   })
 
-  // Cmd/Ctrl + Enter to save
   function handleKeyDown(e: React.KeyboardEvent) {
     if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
       e.preventDefault()
@@ -84,21 +82,14 @@ export function JournalEditor({
     }
   }
 
-  function handleBack() {
-    router.push('/')
-  }
-
   const isEmpty = !title.trim() && !body.trim()
 
   return (
-    <div
-      className="min-h-screen flex flex-col bg-[#FAF8F5]"
-      onKeyDown={handleKeyDown}
-    >
+    <div className="min-h-screen flex flex-col" onKeyDown={handleKeyDown}>
       {/* ── Top bar ─────────────────────────────────────── */}
       <header className="flex items-center justify-between px-6 py-3 border-b border-[#E8E2D9] bg-[#FAF8F5] sticky top-0 z-10">
         <button
-          onClick={handleBack}
+          onClick={() => router.push('/')}
           className="flex items-center gap-1.5 text-sm text-[#8B7D72] hover:text-[#2C2825] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C9E8A] rounded-md px-1"
           aria-label="Back to dashboard"
         >
@@ -125,47 +116,55 @@ export function JournalEditor({
         </Button>
       </header>
 
-      {/* ── Editor area ─────────────────────────────────── */}
-      <div className="flex-1 max-w-2xl mx-auto w-full px-6 sm:px-8 pt-10 pb-6 animate-page-enter">
-        {/* Date */}
-        <p className="text-sm text-[#B5A99F] mb-6 tabular-nums">
-          {new Date().toLocaleDateString('en-US', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-          })}
-        </p>
+      {/* ── Paper container ──────────────────────────────── */}
+      <div className="flex-1 flex justify-center px-4 py-8 animate-page-enter">
+        {/*
+          The paper: white ruled background, fixed max-width, full height.
+          Shadow gives it lift off the dotted page background.
+        */}
+        <div
+          className="ruled-paper w-full max-w-2xl rounded-sm shadow-md flex flex-col"
+          style={{ minHeight: 'calc(100vh - 10rem)' }}
+        >
+          {/* Paper header — date + title, above the ruled lines */}
+          <div className="px-6 pt-8 pb-4 border-b border-[#EAE4DC]" style={{ paddingLeft: 'calc(var(--rule-margin) + 1.25rem)' }}>
+            <p className="text-sm text-[#B5A99F] mb-4 tabular-nums">
+              {new Date().toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })}
+            </p>
 
-        {/* Title */}
-        <input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="What's on your mind today?"
-          maxLength={300}
-          className="w-full font-serif text-4xl sm:text-5xl bg-transparent border-none outline-none placeholder:text-[#D4CEC8] text-[#2C2825] mb-6 leading-tight caret-[#7C9E8A]"
-          aria-label="Entry title"
-        />
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Title"
+              maxLength={300}
+              className="w-full font-serif text-4xl sm:text-5xl bg-transparent border-none outline-none placeholder:text-[#D4CEC8] text-[#2C2825] leading-tight caret-[#7C9E8A]"
+              aria-label="Entry title"
+            />
+          </div>
 
-        {/* Divider */}
-        <div className="border-t border-[#E8E2D9] mb-8" />
-
-        {/* Body */}
-        <textarea
-          ref={bodyRef}
-          value={body}
-          onChange={(e) => setBody(e.target.value)}
-          placeholder="Your story begins here..."
-          className="w-full font-serif text-xl leading-[1.9] bg-transparent border-none outline-none resize-none placeholder:text-[#D4CEC8] text-[#2C2825]"
-          style={{
-            caretColor: '#7C9E8A',
-            minHeight: '400px',
-            // Override any browser textarea defaults
-            fontFamily: 'var(--font-lora), Georgia, serif',
-          }}
-          aria-label="Entry body"
-          spellCheck
-        />
+          {/* Ruled writing area */}
+          <div className="flex-1 px-0 pt-0 pb-8">
+            <textarea
+              ref={bodyRef}
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              placeholder="Start writing..."
+              className="ruled-text w-full bg-transparent border-none outline-none resize-none placeholder:text-[#D4CEC8] text-[#2C2825] text-xl pt-[calc(var(--rule-h)*0.5)] pr-6"
+              style={{
+                caretColor: '#7C9E8A',
+                minHeight: 'calc(var(--rule-h) * 12)',
+                fontFamily: 'var(--font-lora), Georgia, serif',
+              }}
+              aria-label="Entry body"
+              spellCheck
+            />
+          </div>
+        </div>
       </div>
 
       {/* ── Bottom bar ──────────────────────────────────── */}

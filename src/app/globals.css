@@ -112,3 +112,32 @@ body {
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
+
+/* ── Ruled paper ───────────────────────────────────────────────── */
+/* Line height must match --rule-h exactly for text to sit on lines */
+:root {
+  --rule-h: 2.75rem;       /* height of one ruled line */
+  --rule-color: #EAE4DC;   /* subtle warm line color   */
+  --rule-margin: 4rem;     /* left red-margin position */
+}
+
+.ruled-paper {
+  background-color: #FEFCF8;
+  background-image:
+    /* Red margin line */
+    linear-gradient(90deg,
+      transparent calc(var(--rule-margin) - 1px),
+      #F5C4C4 calc(var(--rule-margin) - 1px),
+      #F5C4C4 var(--rule-margin),
+      transparent var(--rule-margin)
+    ),
+    /* Horizontal ruled lines */
+    linear-gradient(transparent calc(var(--rule-h) - 1px), var(--rule-color) calc(var(--rule-h) - 1px));
+  background-size: 100% var(--rule-h);
+  background-attachment: local;
+}
+
+.ruled-text {
+  line-height: var(--rule-h);
+  padding-left: calc(var(--rule-margin) + 1.25rem);
+}
