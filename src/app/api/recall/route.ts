@@ -40,7 +40,7 @@ export async function POST(request: Request) {
 
     const userObjectId = new mongoose.Types.ObjectId(userId)
 
-    // 2. Vector search — top 20, post-filter by userId to avoid Atlas filter index requirement
+    // 2. Vector search — filtered by userId at Atlas level (requires filter field in index)
     console.log('[recall] running $vectorSearch pipeline...')
     const pipeline = [
       {
@@ -49,13 +49,13 @@ export async function POST(request: Request) {
           path: 'embedding',
           queryVector: queryEmbedding,
           numCandidates: 50,
-          limit: 20,
+          limit: 5,
+          filter: { userId: userObjectId },
         },
       },
       {
         $project: {
           _id: 1,
-          userId: 1,
           title: 1,
           body: 1,
           mood: 1,
@@ -65,13 +65,8 @@ export async function POST(request: Request) {
       },
     ]
 
-    const allResults = await JournalEntry.aggregate(pipeline)
-    console.log(`[recall] vectorSearch returned ${allResults.length} results (before user filter)`)
-
-    const retrieved = allResults
-      .filter((e) => String(e.userId) === String(userObjectId))
-      .slice(0, 5)
-    console.log(`[recall] ${retrieved.length} results after userId filter`)
+    const retrieved = await JournalEntry.aggregate(pipeline)
+    console.log(`[recall] vectorSearch returned ${retrieved.length} results`)
 
     if (retrieved.length === 0) {
       console.log('[recall] no entries found — returning empty response')
