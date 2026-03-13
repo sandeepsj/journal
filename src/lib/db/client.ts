@@ -1,23 +1,23 @@
 import mongoose from 'mongoose'
 
-// Connection cache to prevent multiple connections in dev (hot reload)
+// Cache the promise so concurrent calls await the same connection attempt
 declare global {
   // eslint-disable-next-line no-var
-  var _mongooseConn: typeof mongoose | null
+  var _mongoosePromise: Promise<typeof mongoose> | null
 }
 
-let cached = global._mongooseConn ?? null
+let cachedPromise: Promise<typeof mongoose> | null = global._mongoosePromise ?? null
 
 export async function connectDB(): Promise<typeof mongoose> {
-  if (cached) return cached
+  if (cachedPromise) return cachedPromise
 
   const MONGODB_URI = process.env.MONGODB_URI
   if (!MONGODB_URI) throw new Error('MONGODB_URI environment variable is not defined')
 
-  cached = await mongoose.connect(MONGODB_URI, {
+  cachedPromise = mongoose.connect(MONGODB_URI, {
     bufferCommands: false,
   })
 
-  global._mongooseConn = cached
-  return cached
+  global._mongoosePromise = cachedPromise
+  return cachedPromise
 }

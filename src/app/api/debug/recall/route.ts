@@ -14,28 +14,57 @@ export async function GET() {
   await connectDB()
   const userObjectId = new mongoose.Types.ObjectId(userId)
 
-  const [entries, entriesWithEmbedding, totalChunks] = await Promise.all([
+  const [entries, totalChunks, sampleChunk] = await Promise.all([
     JournalEntry.find({ userId: userObjectId }).select('_id title createdAt').lean(),
-    JournalEntry.countDocuments({ userId: userObjectId, 'embedding.0': { $exists: true } }),
     JournalChunk.countDocuments({ userId: userObjectId }),
+    JournalChunk.findOne({ userId: userObjectId }).select('embedding chunkIndex text').lean(),
   ])
 
-  const entryDetails = entries.map((e) => ({
-    id: String(e._id),
-    title: e.title,
-    createdAt: e.createdAt,
-  }))
+  const chunkEmbeddingDims = sampleChunk?.embedding?.length ?? 0
+
+  // Try a real vector search to detect missing Atlas index
+  let vectorSearchWorks = false
+  let vectorSearchError = ''
+  if (sampleChunk?.embedding?.length) {
+    try {
+      const testResults = await JournalChunk.aggregate([
+        {
+          $vectorSearch: {
+            index: 'vector_index',
+            path: 'embedding',
+            queryVector: sampleChunk.embedding,
+            numCandidates: 10,
+            limit: 1,
+            filter: { userId: userObjectId },
+          },
+        },
+        { $project: { _id: 1 } },
+      ])
+      vectorSearchWorks = testResults.length >= 0  // even 0 results means index exists
+    } catch (err) {
+      vectorSearchError = err instanceof Error ? err.message : String(err)
+    }
+  }
+
+  let diagnosis = ''
+  if (totalChunks === 0) {
+    diagnosis = '⚠️  No chunks — run: fetch("/api/admin/reembed", { method: "POST" }).then(r=>r.json()).then(console.log)'
+  } else if (chunkEmbeddingDims === 0) {
+    diagnosis = '⚠️  Chunks exist but have no embeddings — run reembed'
+  } else if (vectorSearchError) {
+    diagnosis = `❌ Atlas Vector Search index missing or broken on "journalchunks". Error: ${vectorSearchError}. Create index named "vector_index" with ${chunkEmbeddingDims} dims on journalchunks collection.`
+  } else {
+    diagnosis = '✅ Chunks + embeddings + Atlas index all look good'
+  }
 
   return NextResponse.json({
     userId,
     totalEntries: entries.length,
-    entriesWithEmbedding,
     totalChunks,
-    entries: entryDetails,
-    diagnosis: totalChunks === 0
-      ? '⚠️  No chunks found — run fetch("/api/admin/reembed", { method: "POST" }) in the browser console'
-      : entriesWithEmbedding < entries.length
-      ? '⚠️  Some entries missing embeddings — run reembed'
-      : '✅ Looks good — check Atlas vector index if recall still fails',
+    chunkEmbeddingDims,
+    vectorSearchWorks,
+    vectorSearchError: vectorSearchError || null,
+    diagnosis,
+    sampleChunkText: sampleChunk?.text?.slice(0, 100) ?? null,
   })
 }
