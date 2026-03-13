@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth/options'
 import { connectDB } from '@/lib/db/client'
 import { JournalEntry } from '@/lib/db/models/JournalEntry'
 import { storeChunksForEntry } from '@/lib/embeddings/storeChunks'
+import { generateEmbedding } from '@/lib/embeddings/generate'
 
 // POST /api/admin/reembed — re-chunk and re-embed all entries for the current user
 export async function POST() {
@@ -27,6 +28,8 @@ export async function POST() {
     const id = String(entry._id)
     try {
       await storeChunksForEntry(id, userId, entry.title, entry.body)
+      const emb = await generateEmbedding(`${entry.title}\n\n${entry.body}`)
+      await JournalEntry.updateOne({ _id: entry._id }, { embedding: emb })
       console.log(`[reembed] ✓ ${id}`)
       results.push({ id, status: 'ok' })
     } catch (err) {

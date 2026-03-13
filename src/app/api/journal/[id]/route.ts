@@ -4,6 +4,7 @@ import { connectDB } from '@/lib/db/client'
 import { JournalEntry } from '@/lib/db/models/JournalEntry'
 import { updateJournalSchema } from '@/lib/validations/journal'
 import { storeChunksForEntry } from '@/lib/embeddings/storeChunks'
+import { generateEmbedding } from '@/lib/embeddings/generate'
 import { JournalChunk } from '@/lib/db/models/JournalChunk'
 
 type Params = { params: Promise<{ id: string }> }
@@ -76,12 +77,15 @@ export async function PUT(request: Request, { params }: Params) {
     await JournalEntry.findByIdAndUpdate(id, updates)
     console.log(`[PUT /api/journal/${id}] updated fields: ${Object.keys(updates).join(', ')}`)
 
-    // Re-chunk if content changed
+    // Re-chunk and re-embed if content changed
     if (updates.title !== undefined || updates.body !== undefined) {
       const title = updates.title ?? existing.title
       const entryBody = updates.body ?? existing.body
       storeChunksForEntry(id, session.user.id, title, entryBody)
         .catch((err) => console.error('[chunks] re-store failed for', id, err))
+      generateEmbedding(`${title}\n\n${entryBody}`)
+        .then((emb) => JournalEntry.updateOne({ _id: id }, { embedding: emb }))
+        .catch(() => {})
     }
 
     return NextResponse.json({ id })

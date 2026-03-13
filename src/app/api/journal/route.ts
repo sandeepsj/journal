@@ -4,6 +4,7 @@ import { connectDB } from '@/lib/db/client'
 import { JournalEntry } from '@/lib/db/models/JournalEntry'
 import { createJournalSchema } from '@/lib/validations/journal'
 import { storeChunksForEntry } from '@/lib/embeddings/storeChunks'
+import { generateEmbedding } from '@/lib/embeddings/generate'
 import type { JournalEntryListItem } from '@/types/journal'
 import type { IJournalEntry } from '@/lib/db/models/JournalEntry'
 
@@ -96,6 +97,11 @@ export async function POST(request: Request) {
     // Store chunks async — non-blocking
     storeChunksForEntry(entryId, session.user.id, title, entryBody)
       .catch((err) => console.error('[chunks] async store failed for', entryId, err))
+
+    // Save entry-level embedding async — best-effort fallback for recall
+    generateEmbedding(`${title}\n\n${entryBody}`)
+      .then((emb) => JournalEntry.updateOne({ _id: entry._id }, { embedding: emb }))
+      .catch(() => {})
 
     return NextResponse.json({ id: entryId }, { status: 201 })
   } catch (err) {
