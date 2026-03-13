@@ -123,7 +123,7 @@ export function JournalEditor({
           Shadow gives it lift off the dotted page background.
         */}
         <div
-          className="ruled-paper w-full max-w-2xl rounded-sm shadow-md flex flex-col"
+          className="ruled-paper w-full max-w-4xl rounded-sm shadow-md flex flex-col"
           style={{ minHeight: 'calc(100vh - 10rem)' }}
         >
           {/* Paper header — date + title, above the ruled lines */}
