@@ -46,11 +46,11 @@ export function JournalCard({
       }}
     >
       <div className="flex items-start justify-between gap-3 mb-2">
-        <h3 className="font-serif text-lg text-[#2C2825] line-clamp-1 flex-1">{title}</h3>
+        <h3 className="font-serif text-xl text-[#2C2825] line-clamp-1 flex-1">{title}</h3>
         <DateStamp date={createdAt} format="short" />
       </div>
 
-      <p className="text-base text-[#8B7D72] line-clamp-2 mb-3 leading-relaxed">{excerpt}</p>
+      <p className="font-serif text-base text-[#8B7D72] line-clamp-2 mb-3 leading-relaxed">{excerpt}</p>
 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">

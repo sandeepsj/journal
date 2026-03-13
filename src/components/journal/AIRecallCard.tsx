@@ -17,8 +17,8 @@ export function AIRecallCard({ title, excerpt, createdAt, mood: _mood }: AIRecal
         </span>
         <DateStamp date={createdAt} format="short" />
       </div>
-      <p className="text-sm font-serif text-[#2C2825] mb-0.5 line-clamp-1">{title}</p>
-      <p className="text-xs text-[#8B7D72] line-clamp-2 leading-relaxed">{excerpt}</p>
+      <p className="text-base font-serif text-[#2C2825] mb-0.5 line-clamp-1">{title}</p>
+      <p className="text-sm font-serif text-[#8B7D72] line-clamp-2 leading-relaxed">{excerpt}</p>
     </div>
   )
 }

@@ -142,7 +142,7 @@ export function JournalEditor({
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Title"
               maxLength={300}
-              className="w-full font-serif text-4xl sm:text-5xl bg-transparent border-none outline-none ring-0 focus:outline-none focus:ring-0 placeholder:text-[#D4CEC8] text-[#2C2825] leading-tight caret-[#7C9E8A]"
+              className="w-full font-serif text-5xl bg-transparent border-none outline-none ring-0 focus:outline-none focus:ring-0 placeholder:text-[#D4CEC8] text-[#2C2825] leading-tight caret-[#7C9E8A]"
               aria-label="Entry title"
             />
           </div>
@@ -154,7 +154,7 @@ export function JournalEditor({
               value={body}
               onChange={(e) => setBody(e.target.value)}
               placeholder="Start writing..."
-              className="ruled-text w-full bg-transparent border-none outline-none ring-0 focus:outline-none focus:ring-0 resize-none placeholder:text-[#D4CEC8] text-[#2C2825] text-xl"
+              className="ruled-text w-full bg-transparent border-none outline-none ring-0 focus:outline-none focus:ring-0 resize-none placeholder:text-[#D4CEC8] text-[#2C2825] text-lg"
               style={{
                 caretColor: '#7C9E8A',
                 minHeight: 'calc(var(--rule-h) * 12)',

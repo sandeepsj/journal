@@ -111,7 +111,7 @@ export function RecallPanel({ expanded = false }: RecallPanelProps) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Ask your journal… e.g. When did I last feel at peace?"
-          className={`flex-1 bg-transparent border-none outline-none text-[#2C2825] placeholder:text-[#B5A99F] ${expanded ? 'text-base' : 'text-sm'}`}
+          className="flex-1 bg-transparent border-none outline-none text-[#2C2825] placeholder:text-[#B5A99F] text-base"
           aria-label="Ask your journal a question"
           disabled={isStreaming}
           autoFocus={expanded}
@@ -139,7 +139,7 @@ export function RecallPanel({ expanded = false }: RecallPanelProps) {
           {/* Streaming answer */}
           {(answer || isStreaming) && (
             <div>
-              <p className={`leading-relaxed text-[#2C2825] font-serif whitespace-pre-wrap ${expanded ? 'text-base' : 'text-sm'}`}>
+              <p className="leading-relaxed text-[#2C2825] font-serif whitespace-pre-wrap text-base">
                 {answer}
                 {isStreaming && !answer && <LoadingDots size="sm" />}
                 {isStreaming && answer && (
@@ -151,7 +151,7 @@ export function RecallPanel({ expanded = false }: RecallPanelProps) {
 
           {/* Error */}
           {error && (
-            <p className={`text-[#C4614E] ${expanded ? 'text-base' : 'text-sm'}`}>{error}</p>
+            <p className="text-[#C4614E] text-base">{error}</p>
           )}
 
           {/* Citations */}

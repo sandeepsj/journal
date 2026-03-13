@@ -12,7 +12,7 @@ export default async function LoginPage() {
           <h1 className="font-serif text-5xl font-normal tracking-tight text-[#2C2825]">
             Muse
           </h1>
-          <p className="text-[#8B7D72] text-sm">A space to remember yourself</p>
+          <p className="text-[#8B7D72] text-lg">A space to remember yourself</p>
         </div>
 
         <div className="bg-white border border-[#E8E2D9] rounded-xl p-8 w-full shadow-sm space-y-6">
@@ -29,7 +29,7 @@ export default async function LoginPage() {
           >
             <button
               type="submit"
-              className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-lg border border-[#E8E2D9] bg-white hover:bg-[#F2EEE8] transition-colors duration-150 text-sm font-medium text-[#2C2825]"
+              className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-lg border border-[#E8E2D9] bg-white hover:bg-[#F2EEE8] transition-colors duration-150 text-base font-medium text-[#2C2825]"
             >
               <GoogleIcon />
               Continue with Google
