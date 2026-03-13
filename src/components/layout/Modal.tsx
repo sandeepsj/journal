@@ -52,7 +52,7 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
     >
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-[#2C2825]/20 backdrop-blur-sm animate-fade-in"
+        className="absolute inset-0 bg-[#2C2825]/30 backdrop-blur-sm animate-fade-in"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -61,7 +61,7 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
       <div
         ref={dialogRef}
         tabIndex={-1}
-        className={`relative bg-white border border-[#E8E2D9] rounded-2xl shadow-lg w-full ${sizeMap[size]} animate-page-enter focus:outline-none`}
+        className={`relative bg-white/90 backdrop-blur-md border border-[#E8E2D9] rounded-2xl shadow-[var(--shadow-xl)] w-full ${sizeMap[size]} animate-scale-in focus:outline-none`}
       >
         {title && (
           <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-[#E8E2D9]">

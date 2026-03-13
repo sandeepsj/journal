@@ -14,7 +14,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
-    'bg-[#7C9E8A] text-white hover:bg-[#6a8f7a] border border-transparent',
+    'bg-[#7C9E8A] text-white hover:bg-[#6a8f7a] border border-transparent shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-accent)] active:translate-y-px active:shadow-none',
   ghost:
     'bg-transparent text-[#2C2825] hover:bg-[#F2EEE8] border border-[#E8E2D9]',
   danger:
@@ -43,7 +43,7 @@ export function Button({
     <button
       disabled={isDisabled}
       className={[
-        'inline-flex items-center justify-center font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C9E8A] focus-visible:ring-offset-2',
+        'inline-flex items-center justify-center font-medium transition-[colors,box-shadow,transform] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C9E8A] focus-visible:ring-offset-2',
         variantClasses[variant],
         sizeClasses[size],
         fullWidth ? 'w-full' : '',

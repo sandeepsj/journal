@@ -37,7 +37,7 @@ export function Navbar({ userName, userEmail, userImage, onSignOut }: NavbarProp
   }, [])
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[#E8E2D9] bg-[#FAF8F5]">
+    <header className="sticky top-0 z-40 border-b border-[#E8E2D9]/60 bg-[#FAF8F5]/80 backdrop-blur-md shadow-[var(--shadow-xs)]">
       <div className="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
         <Link
           href="/"
@@ -60,7 +60,7 @@ export function Navbar({ userName, userEmail, userImage, onSignOut }: NavbarProp
           {menuOpen && (
             <div
               role="menu"
-              className="absolute right-0 mt-2 w-52 bg-white border border-[#E8E2D9] rounded-xl shadow-md p-1 animate-fade-in"
+              className="absolute right-0 mt-2 w-52 bg-white/90 backdrop-blur-sm border border-[#E8E2D9] rounded-xl shadow-[var(--shadow-lg)] p-1 animate-fade-in"
             >
               <div className="px-3 py-2 border-b border-[#E8E2D9] mb-1">
                 <p className="text-base font-medium text-[#2C2825] truncate">{userName}</p>

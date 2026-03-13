@@ -97,9 +97,9 @@ export function RecallPanel({ expanded = false }: RecallPanelProps) {
   }
 
   return (
-    <div className="bg-white border border-[#E8E2D9] rounded-2xl overflow-hidden shadow-sm">
+    <div className="bg-white/80 backdrop-blur-sm border border-[#E8E2D9]/60 rounded-2xl overflow-hidden shadow-[var(--shadow-md)]">
       {/* Input */}
-      <form onSubmit={handleSubmit} className={`flex items-center gap-3 ${expanded ? 'px-5 py-4' : 'px-4 py-3'}`}>
+      <form onSubmit={handleSubmit} className={`flex items-center gap-3 bg-gradient-to-b from-[#FEFCFA] to-white ${expanded ? 'px-5 py-4' : 'px-4 py-3'}`}>
         <span className="text-[#B5A99F] flex-shrink-0" aria-hidden="true">
           <svg width={expanded ? 20 : 16} height={expanded ? 20 : 16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z" />
@@ -135,7 +135,7 @@ export function RecallPanel({ expanded = false }: RecallPanelProps) {
 
       {/* Results */}
       {hasAsked && (
-        <div className="border-t border-[#E8E2D9] px-5 py-5 space-y-5 animate-fade-in">
+        <div className="border-t border-[#E8E2D9]/60 px-5 py-5 space-y-5 animate-scale-in bg-gradient-to-b from-white/60 to-white">
           {/* Streaming answer */}
           {(answer || isStreaming) && (
             <div>

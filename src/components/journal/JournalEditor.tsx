@@ -87,7 +87,7 @@ export function JournalEditor({
   return (
     <div className="min-h-screen flex flex-col" onKeyDown={handleKeyDown}>
       {/* ── Top bar ─────────────────────────────────────── */}
-      <header className="flex items-center justify-between px-6 py-3 border-b border-[#E8E2D9] bg-[#FAF8F5] sticky top-0 z-10">
+      <header className="flex items-center justify-between px-6 py-3 border-b border-[#E8E2D9]/60 bg-[#FAF8F5]/80 backdrop-blur-md shadow-[var(--shadow-xs)] sticky top-0 z-20">
         <button
           onClick={() => router.push('/')}
           className="flex items-center gap-1.5 text-sm text-[#8B7D72] hover:text-[#2C2825] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C9E8A] rounded-md px-1"
@@ -168,7 +168,7 @@ export function JournalEditor({
       </div>
 
       {/* ── Bottom bar ──────────────────────────────────── */}
-      <footer className="sticky bottom-0 flex items-center justify-between px-6 py-3 border-t border-[#E8E2D9] bg-[#FAF8F5]">
+      <footer className="sticky bottom-0 flex items-center justify-between px-6 py-3 border-t border-[#E8E2D9]/60 bg-[#FAF8F5]/80 backdrop-blur-md shadow-[0_-2px_8px_rgba(44,40,37,0.06)]">
         <MoodSelector value={mood} onChange={setMood} />
         <WordCount count={wordCount} />
       </footer>

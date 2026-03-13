@@ -10,7 +10,7 @@ export interface AIRecallCardProps {
 
 export function AIRecallCard({ title, excerpt, createdAt, mood: _mood }: AIRecallCardProps) {
   return (
-    <div className="border-l-2 border-[#7C9E8A] pl-3 py-1">
+    <div className="bg-[#FAFAF9] border-l-2 border-[#7C9E8A] pl-3 py-1 rounded-r-md shadow-[var(--shadow-xs)] hover:shadow-[var(--shadow-sm)] hover:border-l-[#6A9B77] transition-[box-shadow,border-color] duration-150">
       <div className="flex items-center gap-2 mb-1">
         <span className="text-[10px] font-medium text-[#7C9E8A] uppercase tracking-wide">
           Recalled from

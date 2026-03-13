@@ -11,6 +11,7 @@ export interface JournalCardProps {
   wordCount: number
   onClick: () => void
   onDelete?: () => void
+  className?: string
 }
 
 const moodLabel: Record<Mood, string> = {
@@ -29,10 +30,11 @@ export function JournalCard({
   wordCount,
   onClick,
   onDelete,
+  className = '',
 }: JournalCardProps) {
   return (
     <article
-      className="group bg-white border border-[#E8E2D9] rounded-xl p-5 hover:shadow-md hover:border-[#B5A99F] transition-all duration-150 cursor-pointer"
+      className={`animate-slide-up group bg-white border border-[#E8E2D9] rounded-xl p-5 shadow-[var(--shadow-xs)] hover:-translate-y-1 hover:shadow-[var(--shadow-md)] hover:border-[#B5A99F] hover:bg-gradient-to-br hover:from-white hover:to-[#F7F4F0] transition-[transform,box-shadow,background] duration-200 cursor-pointer ${className}`}
       onClick={onClick}
       role="button"
       tabIndex={0}

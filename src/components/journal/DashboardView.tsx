@@ -43,7 +43,7 @@ export function DashboardView({ userName }: DashboardViewProps) {
     <div className="max-w-5xl mx-auto px-6 py-8 pb-28 space-y-8 animate-page-enter relative">
       {/* Greeting */}
       <div>
-        <h1 className="font-serif text-4xl text-[#2C2825]">{greeting}</h1>
+        <h1 className="font-serif text-4xl text-[#2C2825] animate-slide-up stagger-1">{greeting}</h1>
         <p className="text-base text-[#B5A99F] mt-1">
           {new Date().toLocaleDateString('en-US', {
             weekday: 'long',
@@ -56,9 +56,9 @@ export function DashboardView({ userName }: DashboardViewProps) {
       {/* Ask your journal card */}
       <button
         onClick={() => router.push('/recall')}
-        className="w-full text-left bg-white border border-[#E8E2D9] rounded-2xl px-5 py-4 flex items-center gap-4 hover:border-[#7C9E8A] hover:shadow-md transition-all duration-150 group shadow-sm"
+        className="w-full text-left bg-gradient-to-r from-[#EAF1EC] to-white border border-[#E8E2D9] rounded-2xl px-5 py-4 flex items-center gap-4 hover:from-[#7C9E8A]/10 hover:to-[#EAF1EC] hover:border-[#7C9E8A] shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-accent)] transition-all duration-200 group"
       >
-        <div className="w-10 h-10 rounded-full bg-[#EAF1EC] flex items-center justify-center flex-shrink-0 group-hover:bg-[#7C9E8A] transition-colors duration-150">
+        <div className="w-10 h-10 rounded-full bg-[#EAF1EC] flex items-center justify-center flex-shrink-0 group-hover:bg-[#7C9E8A] group-hover:shadow-[var(--shadow-accent)] transition-all duration-200">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[#7C9E8A] group-hover:text-white transition-colors duration-150">
             <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z" />
             <path d="M12 8v4l3 3" />
@@ -124,12 +124,13 @@ export function DashboardView({ userName }: DashboardViewProps) {
       {entries.length > 0 && (
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {entries.map((entry) => (
+            {entries.map((entry, index) => (
               <JournalCard
                 key={entry.id}
                 {...entry}
                 onClick={() => router.push(`/journal/${entry.id}`)}
                 onDelete={() => setDeleteId(entry.id)}
+                className={`stagger-${(index % 5) + 1}`}
               />
             ))}
           </div>
@@ -165,7 +166,7 @@ export function DashboardView({ userName }: DashboardViewProps) {
       <button
         onClick={() => router.push('/journal/new')}
         aria-label="New journal entry"
-        className="fixed bottom-8 right-8 md:bottom-12 md:right-12 xl:right-16 w-14 h-14 rounded-full bg-[#7C9E8A] text-white shadow-lg hover:bg-[#6A9B77] hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-150 flex items-center justify-center z-30"
+        className="fixed bottom-8 right-8 md:bottom-12 md:right-12 xl:right-16 w-14 h-14 rounded-full bg-[#7C9E8A] text-white shadow-[var(--shadow-lg)] hover:bg-[#6A9B77] hover:shadow-[var(--shadow-accent)] hover:scale-110 active:scale-95 transition-all duration-150 flex items-center justify-center z-30"
       >
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <path d="M12 5v14M5 12h14" />
