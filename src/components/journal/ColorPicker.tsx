@@ -166,8 +166,9 @@ export function ColorPicker({ value, onChange, label }: ColorPickerProps) {
             style={{
               height: 130,
               backgroundColor: pureHue,
-              backgroundImage: `linear-gradient(to right, #ffffff, transparent),
-                                linear-gradient(to bottom, transparent, #000000)`,
+              // black-to-transparent MUST be on top so bottom-left corner is black, not white
+              backgroundImage: `linear-gradient(to bottom, transparent, #000000),
+                                linear-gradient(to right, #ffffff, rgba(255, 255, 255, 0))`,
             }}
             onPointerDown={(e) => {
               e.currentTarget.setPointerCapture(e.pointerId)

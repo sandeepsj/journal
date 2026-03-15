@@ -10,6 +10,9 @@ export interface DrawingCanvasProps {
   erasing?: boolean
   initialData?: string
   canvasRef: RefObject<HTMLCanvasElement | null>
+  /** Observe this element's scrollHeight for canvas height (use textarea ref so
+   *  canvas grows with content instead of being clamped by the flex-1 parent) */
+  sizeRef?: RefObject<HTMLTextAreaElement | null>
   onChange: (dataUrl: string) => void
 }
 
@@ -21,6 +24,7 @@ export function DrawingCanvas({
   erasing = false,
   initialData,
   canvasRef,
+  sizeRef,
   onChange,
 }: DrawingCanvasProps) {
   const isDrawingRef = useRef(false)
@@ -34,11 +38,15 @@ export function DrawingCanvas({
     const ctx = canvas.getContext('2d')
     if (!ctx) return
     const img = new Image()
-    img.onload = () => ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+    // Draw at 1:1 — do NOT stretch to canvas dimensions.
+    // When the canvas grows (more text), existing drawings stay in place and
+    // the newly revealed area below is simply blank.
+    img.onload = () => ctx.drawImage(img, 0, 0)
     img.src = src
   }
 
-  // Sync canvas size to parent via ResizeObserver — restore snapshot after each resize
+  // Sync canvas size — observe the textarea (sizeRef) when provided so the
+  // canvas grows with content, bypassing the flex-1 parent height constraint.
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -46,21 +54,28 @@ export function DrawingCanvas({
     if (!parent) return
 
     const resizeCanvas = () => {
-      const { width, height } = parent.getBoundingClientRect()
+      // Width always comes from the parent (= paper width)
+      const width = parent.clientWidth
+      // Height: use textarea's full scrollHeight so canvas covers all text,
+      // even when the textarea overflows the flex-1 container
+      const height = sizeRef?.current
+        ? sizeRef.current.scrollHeight
+        : parent.getBoundingClientRect().height
       if (width === 0 || height === 0) return
-      // Setting dimensions clears the canvas — restore from snapshot
       canvas.width = width
       canvas.height = height
       restoreSnapshot(canvas)
     }
 
+    // Observe whichever element drives the height
+    const observeTarget = sizeRef?.current ?? parent
     const observer = new ResizeObserver(resizeCanvas)
-    observer.observe(parent)
+    observer.observe(observeTarget)
     resizeCanvas()
 
     return () => observer.disconnect()
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canvasRef])
+  }, [canvasRef, sizeRef])
 
   // Sync canvas pixels whenever initialData changes (undo/redo/clear/load from DB)
   useEffect(() => {
@@ -72,7 +87,7 @@ export function DrawingCanvas({
     ctx.clearRect(0, 0, canvas.width, canvas.height)
     if (initialData) {
       const img = new Image()
-      img.onload = () => ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+      img.onload = () => ctx.drawImage(img, 0, 0)  // 1:1, consistent with restoreSnapshot
       img.src = initialData
     }
   }, [initialData, canvasRef])
@@ -129,7 +144,13 @@ export function DrawingCanvas({
       ref={canvasRef}
       style={{
         position: 'absolute',
-        inset: 0,
+        top: 0,
+        left: 0,
+        // width: 100% matches the parent; height is NOT set in CSS so the
+        // browser uses the HTML canvas.height attribute — this lets the canvas
+        // grow to textarea.scrollHeight instead of being clipped to the
+        // flex-1 parent's layout height
+        width: '100%',
         zIndex: 2,
         pointerEvents: active ? 'auto' : 'none',
         cursor: active ? (erasing ? 'cell' : 'crosshair') : 'default',

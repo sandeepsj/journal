@@ -252,8 +252,11 @@ export function JournalEditor({
             />
           </div>
 
-          {/* Drawing toolbar */}
-          <div className="flex justify-start px-6 py-2 border-b border-[#EAE4DC]">
+          {/* Drawing toolbar — relative + z-10 ensures the color picker dropdown
+              paints above the drawing canvas (z-2), even though canvas has an
+              explicit z-index and the toolbar's backdrop-filter creates a stacking
+              context without one */}
+          <div className="flex justify-start px-6 py-2 border-b border-[#EAE4DC] relative z-10">
             <DrawingToolbar
               mode={mode}
               onModeChange={setMode}
@@ -301,6 +304,7 @@ export function JournalEditor({
               erasing={erasing}
               initialData={drawingData ?? undefined}
               canvasRef={canvasRef}
+              sizeRef={bodyRef}
               onChange={handleDrawingChange}
             />
           </div>
