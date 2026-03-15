@@ -35,6 +35,8 @@ export async function GET(_req: Request, { params }: Params) {
       body: entry.body,
       mood: entry.mood,
       wordCount: entry.wordCount,
+      drawing: entry.drawing ?? null,
+      textColor: entry.textColor ?? '#2C2825',
       createdAt: entry.createdAt.toISOString(),
       updatedAt: entry.updatedAt.toISOString(),
     })

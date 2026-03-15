@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/Button'
 import { MoodSelector } from './MoodSelector'
 import { WordCount } from './WordCount'
 import { AutoSaveStatus } from './AutoSaveStatus'
+import { DrawingCanvas } from './DrawingCanvas'
+import { DrawingToolbar } from './DrawingToolbar'
 import { useAutoSave } from '@/hooks/useAutoSave'
 import { useWordCount } from '@/hooks/useWordCount'
 import type { Mood } from '@/types/journal'
@@ -15,6 +17,8 @@ export interface JournalEditorProps {
   initialTitle?: string
   initialBody?: string
   initialMood?: Mood | null
+  initialTextColor?: string
+  initialDrawing?: string | null
 }
 
 export function JournalEditor({
@@ -22,13 +26,22 @@ export function JournalEditor({
   initialTitle = '',
   initialBody = '',
   initialMood = null,
+  initialTextColor = '#2C2825',
+  initialDrawing = null,
 }: JournalEditorProps) {
   const router = useRouter()
   const [title, setTitle] = useState(initialTitle)
   const [body, setBody] = useState(initialBody)
   const [mood, setMood] = useState<Mood | null>(initialMood)
+  const [mode, setMode] = useState<'write' | 'draw'>('write')
+  const [textColor, setTextColor] = useState(initialTextColor)
+  const [brushColor, setBrushColor] = useState('#2C2825')
+  const [brushSize, setBrushSize] = useState(2)
+  const [erasing, setErasing] = useState(false)
+  const [drawingData, setDrawingData] = useState<string | null>(initialDrawing)
 
   const bodyRef = useRef<HTMLTextAreaElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
   const savedEntryIdRef = useRef<string | null>(entryId ?? null)
 
   const wordCount = useWordCount(body)
@@ -45,8 +58,16 @@ export function JournalEditor({
     if (!entryId) bodyRef.current?.focus()
   }, [entryId])
 
+  function handleClearDrawing() {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height)
+    setDrawingData(null)
+  }
+
   const handleSave = useCallback(
-    async (data: { title: string; body: string; mood: Mood | null }) => {
+    async (data: { title: string; body: string; mood: Mood | null; textColor: string; drawing: string | null }) => {
       const hasContent = data.title.trim() || data.body.trim()
       if (!hasContent) return
 
@@ -70,7 +91,7 @@ export function JournalEditor({
   )
 
   const { status, save } = useAutoSave({
-    data: { title, body, mood },
+    data: { title, body, mood, textColor, drawing: drawingData },
     onSave: handleSave,
     interval: 30000,
   })
@@ -118,10 +139,6 @@ export function JournalEditor({
 
       {/* ── Paper container ──────────────────────────────── */}
       <div className="flex-1 flex justify-center px-4 py-8 animate-page-enter">
-        {/*
-          The paper: white ruled background, fixed max-width, full height.
-          Shadow gives it lift off the dotted page background.
-        */}
         <div
           className="ruled-paper w-full max-w-4xl rounded-sm shadow-md flex flex-col"
           style={{ minHeight: 'calc(100vh - 10rem)' }}
@@ -142,26 +159,55 @@ export function JournalEditor({
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Title"
               maxLength={300}
-              className="w-full font-serif text-5xl bg-transparent border-none outline-none ring-0 focus:outline-none focus:ring-0 placeholder:text-[#D4CEC8] text-[#2C2825] leading-tight caret-[#7C9E8A]"
+              className="w-full text-5xl bg-transparent border-none outline-none ring-0 focus:outline-none focus:ring-0 placeholder:text-[#D4CEC8] leading-tight caret-[#7C9E8A]"
+              style={{ color: textColor, fontFamily: 'var(--font-handwriting)' }}
               aria-label="Entry title"
             />
           </div>
 
-          {/* Ruled writing area */}
-          <div className="flex-1 px-0 pt-0 pb-8">
+          {/* Drawing toolbar */}
+          <div className="flex justify-start px-6 py-2 border-b border-[#EAE4DC]">
+            <DrawingToolbar
+              mode={mode}
+              onModeChange={setMode}
+              textColor={textColor}
+              onTextColorChange={setTextColor}
+              brushColor={brushColor}
+              onBrushColorChange={setBrushColor}
+              brushSize={brushSize}
+              onBrushSizeChange={setBrushSize}
+              erasing={erasing}
+              onErasingChange={setErasing}
+              onClearDrawing={handleClearDrawing}
+            />
+          </div>
+
+          {/* Ruled writing area + canvas overlay */}
+          <div className="flex-1 px-0 pt-0 pb-8 relative">
             <textarea
               ref={bodyRef}
               value={body}
               onChange={(e) => setBody(e.target.value)}
               placeholder="Start writing..."
-              className="ruled-text w-full bg-transparent border-none outline-none ring-0 focus:outline-none focus:ring-0 resize-none placeholder:text-[#D4CEC8] text-[#2C2825] text-lg"
+              className="ruled-text w-full bg-transparent border-none outline-none ring-0 focus:outline-none focus:ring-0 resize-none placeholder:text-[#D4CEC8] text-lg relative z-[1]"
               style={{
                 caretColor: '#7C9E8A',
                 minHeight: 'calc(var(--rule-h) * 12)',
-                fontFamily: 'var(--font-lora), Georgia, serif',
+                fontFamily: 'var(--font-handwriting)',
+                color: textColor,
+                pointerEvents: mode === 'write' ? 'auto' : 'none',
               }}
               aria-label="Entry body"
               spellCheck
+            />
+            <DrawingCanvas
+              active={mode === 'draw'}
+              brushColor={brushColor}
+              brushSize={brushSize}
+              erasing={erasing}
+              initialData={drawingData ?? undefined}
+              canvasRef={canvasRef}
+              onChange={setDrawingData}
             />
           </div>
         </div>

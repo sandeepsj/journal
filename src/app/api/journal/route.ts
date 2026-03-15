@@ -76,7 +76,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
     }
 
-    const { title: rawTitle, body: entryBody, mood } = parsed.data
+    const { title: rawTitle, body: entryBody, mood, textColor, drawing } = parsed.data
     const title = rawTitle?.trim() ||
       new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
     const wordCount = entryBody.trim().split(/\s+/).filter(Boolean).length
@@ -89,6 +89,8 @@ export async function POST(request: Request) {
       body: entryBody,
       mood: mood ?? null,
       wordCount,
+      ...(textColor !== undefined && { textColor }),
+      ...(drawing !== undefined && { drawing }),
     })
 
     const entryId = String(entry._id)

@@ -10,6 +10,8 @@ export interface IJournalEntry {
   mood: Mood | null
   wordCount: number
   embedding: number[]  // 1024-dim from voyage-3
+  drawing: string | null  // base64 PNG — presentation only, not indexed
+  textColor: string
   createdAt: Date
   updatedAt: Date
 }
@@ -26,6 +28,8 @@ const JournalEntrySchema = new Schema<IJournalEntry>(
     },
     wordCount: { type: Number, default: 0 },
     embedding: { type: [Number], default: [] },
+    drawing: { type: String, default: null },
+    textColor: { type: String, default: '#2C2825' },
   },
   { timestamps: true }
 )

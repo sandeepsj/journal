@@ -9,6 +9,8 @@ export interface JournalEntryDTO {
   body: string
   mood: Mood | null
   wordCount: number
+  drawing?: string | null
+  textColor?: string
   createdAt: string
   updatedAt: string
 }

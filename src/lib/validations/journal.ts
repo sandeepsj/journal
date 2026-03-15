@@ -4,6 +4,8 @@ export const createJournalSchema = z.object({
   title: z.string().max(300, 'Title too long').optional().default(''),
   body: z.string().min(1, 'Entry cannot be empty').max(50000, 'Entry too long'),
   mood: z.enum(['calm', 'happy', 'anxious', 'sad', 'grateful']).nullable().optional(),
+  textColor: z.string().max(20).optional(),
+  drawing: z.string().nullable().optional(),
 })
 
 export const updateJournalSchema = createJournalSchema.partial()
