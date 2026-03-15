@@ -23,25 +23,20 @@ export function DrawingCanvas({
 }: DrawingCanvasProps) {
   const isDrawingRef = useRef(false)
   const lastPosRef = useRef<{ x: number; y: number } | null>(null)
-  const initialDataLoadedRef = useRef(false)
+  // Keep a live snapshot of the current drawing so resize can restore it
+  const snapshotRef = useRef<string | null>(initialData ?? null)
 
-  // Load initial data onto canvas once dimensions are set
-  useEffect(() => {
-    if (!initialData || initialDataLoadedRef.current) return
-    const canvas = canvasRef.current
-    if (!canvas) return
+  function restoreSnapshot(canvas: HTMLCanvasElement) {
+    const src = snapshotRef.current
+    if (!src) return
     const ctx = canvas.getContext('2d')
     if (!ctx) return
-
     const img = new Image()
-    img.onload = () => {
-      ctx.drawImage(img, 0, 0)
-      initialDataLoadedRef.current = true
-    }
-    img.src = initialData
-  }, [initialData, canvasRef])
+    img.onload = () => ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+    img.src = src
+  }
 
-  // Sync canvas height to parent container via ResizeObserver
+  // Sync canvas size to parent via ResizeObserver — restore snapshot after each resize
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -50,25 +45,11 @@ export function DrawingCanvas({
 
     const resizeCanvas = () => {
       const { width, height } = parent.getBoundingClientRect()
-      // Preserve existing drawing across resize
-      const imageData = canvas.getContext('2d')?.getImageData(0, 0, canvas.width, canvas.height)
+      if (width === 0 || height === 0) return
+      // Setting dimensions clears the canvas — restore from snapshot
       canvas.width = width
       canvas.height = height
-      if (imageData) {
-        canvas.getContext('2d')?.putImageData(imageData, 0, 0)
-      }
-      // Re-draw initial data if resize happens before it loaded
-      if (initialData && !initialDataLoadedRef.current) {
-        const ctx = canvas.getContext('2d')
-        if (ctx) {
-          const img = new Image()
-          img.onload = () => {
-            ctx.drawImage(img, 0, 0)
-            initialDataLoadedRef.current = true
-          }
-          img.src = initialData
-        }
-      }
+      restoreSnapshot(canvas)
     }
 
     const observer = new ResizeObserver(resizeCanvas)
@@ -76,7 +57,21 @@ export function DrawingCanvas({
     resizeCanvas()
 
     return () => observer.disconnect()
-  }, [canvasRef, initialData])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canvasRef])
+
+  // Keep snapshotRef in sync when initialData changes (load from DB or clear)
+  useEffect(() => {
+    snapshotRef.current = initialData ?? null
+    // If cleared externally, wipe the canvas too
+    if (!initialData) {
+      const canvas = canvasRef.current
+      if (canvas) {
+        const ctx = canvas.getContext('2d')
+        ctx?.clearRect(0, 0, canvas.width, canvas.height)
+      }
+    }
+  }, [initialData, canvasRef])
 
   function getPos(e: React.PointerEvent<HTMLCanvasElement>) {
     const canvas = canvasRef.current!
@@ -119,7 +114,9 @@ export function DrawingCanvas({
     lastPosRef.current = null
     const canvas = canvasRef.current
     if (canvas) {
-      onChange(canvas.toDataURL('image/png'))
+      const dataUrl = canvas.toDataURL('image/png')
+      snapshotRef.current = dataUrl  // keep snapshot current after each stroke
+      onChange(dataUrl)
     }
   }
 

@@ -59,10 +59,6 @@ export function JournalEditor({
   }, [entryId])
 
   function handleClearDrawing() {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const ctx = canvas.getContext('2d')
-    if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height)
     setDrawingData(null)
   }
 
@@ -160,7 +156,7 @@ export function JournalEditor({
               placeholder="Title"
               maxLength={300}
               className="w-full text-5xl bg-transparent border-none outline-none ring-0 focus:outline-none focus:ring-0 placeholder:text-[#D4CEC8] leading-tight caret-[#7C9E8A]"
-              style={{ color: textColor, fontFamily: 'var(--font-handwriting)' }}
+              style={{ color: textColor, fontFamily: 'var(--font-kalam)' }}
               aria-label="Entry title"
             />
           </div>
@@ -189,11 +185,11 @@ export function JournalEditor({
               value={body}
               onChange={(e) => setBody(e.target.value)}
               placeholder="Start writing..."
-              className="ruled-text w-full bg-transparent border-none outline-none ring-0 focus:outline-none focus:ring-0 resize-none placeholder:text-[#D4CEC8] text-lg relative z-[1]"
+              className="ruled-text w-full bg-transparent border-none outline-none ring-0 focus:outline-none focus:ring-0 resize-none placeholder:text-[#D4CEC8] text-[1.35rem] leading-[2.75rem] relative z-[1]"
               style={{
                 caretColor: '#7C9E8A',
                 minHeight: 'calc(var(--rule-h) * 12)',
-                fontFamily: 'var(--font-handwriting)',
+                fontFamily: 'var(--font-kalam)',
                 color: textColor,
                 pointerEvents: mode === 'write' ? 'auto' : 'none',
               }}

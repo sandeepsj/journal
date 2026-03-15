@@ -1,10 +1,11 @@
 import type { Metadata } from 'next'
-import { Caveat, Inter } from 'next/font/google'
+import { Kalam, Inter } from 'next/font/google'
 import './globals.css'
 
-const caveat = Caveat({
-  variable: '--font-caveat',
+const kalam = Kalam({
+  variable: '--font-kalam',
   subsets: ['latin'],
+  weight: ['400', '700'],
   display: 'swap',
 })
 
@@ -21,7 +22,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${caveat.variable} ${inter.variable}`}>
+    <html lang="en" className={`${kalam.variable} ${inter.variable}`}>
       <body className="antialiased bg-[#FAF8F5] text-[#2C2825] font-sans">
         {children}
       </body>

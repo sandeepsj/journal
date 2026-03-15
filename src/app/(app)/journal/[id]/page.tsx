@@ -27,6 +27,8 @@ export default async function EditJournalPage({ params }: Params) {
       initialTitle={entry.title}
       initialBody={entry.body}
       initialMood={entry.mood}
+      initialTextColor={entry.textColor ?? '#2C2825'}
+      initialDrawing={entry.drawing ?? null}
     />
   )
 }
