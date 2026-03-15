@@ -36,6 +36,17 @@ export const ColoredInk: Story = {
   },
 }
 
+export const ExistingPinned: Story = {
+  args: {
+    entryId: 'pinned-789',
+    initialTitle: 'A quiet morning by the window',
+    initialBody:
+      'I woke up before the alarm today. The light was soft and amber.',
+    initialMood: 'calm',
+    initialPinned: true,
+  },
+}
+
 export const LongBody: Story = {
   args: {
     initialTitle: 'Reflections on the year so far',

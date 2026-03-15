@@ -217,3 +217,11 @@ body {
   /* First line sits on the first ruled line */
   vertical-align: top;
 }
+
+/* Horizontal scroll rail — hide scrollbar visually but keep scroll */
+.scrollbar-hide {
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

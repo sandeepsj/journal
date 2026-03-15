@@ -29,3 +29,9 @@ export const LongTitle: Story = {
     title: 'This is a very long journal entry title that should be clamped after one line of text',
   },
 }
+export const Pinned: Story = {
+  args: { isPinned: true, onPin: fn(), onDelete: fn() },
+}
+export const WithPinAndDelete: Story = {
+  args: { isPinned: false, onPin: fn(), onDelete: fn() },
+}

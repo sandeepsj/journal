@@ -29,6 +29,7 @@ export default async function EditJournalPage({ params }: Params) {
       initialMood={entry.mood}
       initialTextColor={entry.textColor ?? '#2C2825'}
       initialDrawing={entry.drawing ?? null}
+      initialPinned={entry.pinned ?? false}
     />
   )
 }

@@ -31,7 +31,7 @@ export async function GET(request: Request) {
 
     const [rawEntries, total] = await Promise.all([
       JournalEntry.find(filter)
-        .select('title mood wordCount body createdAt updatedAt')
+        .select('title mood wordCount body createdAt updatedAt pinned')
         .sort(search ? { score: { $meta: 'textScore' } } : { createdAt: -1 })
         .skip(skip)
         .limit(PAGE_SIZE)
@@ -49,6 +49,7 @@ export async function GET(request: Request) {
       excerpt: (e.body ?? '').slice(0, 120),
       createdAt: e.createdAt.toISOString(),
       updatedAt: e.updatedAt.toISOString(),
+      pinned: e.pinned ?? false,
     }))
 
     return NextResponse.json({

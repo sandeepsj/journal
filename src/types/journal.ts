@@ -24,6 +24,14 @@ export interface JournalEntryListItem {
   excerpt: string   // first 120 chars of body
   createdAt: string
   updatedAt: string
+  pinned: boolean
+}
+
+export interface PinnedEntryCard {
+  id: string
+  title: string
+  mood: Mood | null
+  createdAt: string
 }
 
 export interface RecallResult {

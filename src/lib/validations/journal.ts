@@ -10,6 +10,9 @@ export const createJournalSchema = z.object({
 
 export const updateJournalSchema = createJournalSchema.partial()
 
+export const patchPinSchema = z.object({ pinned: z.boolean() })
+export type PatchPinInput = z.infer<typeof patchPinSchema>
+
 export const recallQuerySchema = z.object({
   query: z.string().min(3, 'Query too short').max(500, 'Query too long'),
   sessionId: z.string().nullable().optional(),

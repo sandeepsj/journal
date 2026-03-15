@@ -165,8 +165,9 @@ export function ColorPicker({ value, onChange, label }: ColorPickerProps) {
             className="relative w-full rounded-lg mb-2 cursor-crosshair overflow-hidden"
             style={{
               height: 130,
-              background: `linear-gradient(to bottom, transparent, #000),
-                           linear-gradient(to right, #fff, ${pureHue})`,
+              backgroundColor: pureHue,
+              backgroundImage: `linear-gradient(to right, #ffffff, transparent),
+                                linear-gradient(to bottom, transparent, #000000)`,
             }}
             onPointerDown={(e) => {
               e.currentTarget.setPointerCapture(e.pointerId)

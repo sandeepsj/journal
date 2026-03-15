@@ -12,6 +12,7 @@ export interface IJournalEntry {
   embedding: number[]  // 1024-dim from voyage-3
   drawing: string | null  // base64 PNG — presentation only, not indexed
   textColor: string
+  pinned: boolean
   createdAt: Date
   updatedAt: Date
 }
@@ -30,6 +31,7 @@ const JournalEntrySchema = new Schema<IJournalEntry>(
     embedding: { type: [Number], default: [] },
     drawing: { type: String, default: null },
     textColor: { type: String, default: '#2C2825' },
+    pinned: { type: Boolean, default: false },
   },
   { timestamps: true }
 )

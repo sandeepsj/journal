@@ -19,6 +19,7 @@ export interface JournalEditorProps {
   initialMood?: Mood | null
   initialTextColor?: string
   initialDrawing?: string | null
+  initialPinned?: boolean
 }
 
 export function JournalEditor({
@@ -28,8 +29,10 @@ export function JournalEditor({
   initialMood = null,
   initialTextColor = '#2C2825',
   initialDrawing = null,
+  initialPinned = false,
 }: JournalEditorProps) {
   const router = useRouter()
+  const [isPinned, setIsPinned] = useState(initialPinned)
   const [title, setTitle] = useState(initialTitle)
   const [body, setBody] = useState(initialBody)
   const [mood, setMood] = useState<Mood | null>(initialMood)
@@ -136,6 +139,23 @@ export function JournalEditor({
     interval: 30000,
   })
 
+  async function handleTogglePin() {
+    if (!savedEntryIdRef.current) return
+    const pinning = !isPinned
+    try {
+      const res = await fetch(`/api/journal/${savedEntryIdRef.current}/pin`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pinned: pinning }),
+      })
+      if (res.ok) {
+        setIsPinned(pinning)
+      }
+    } catch (err) {
+      console.error('[JournalEditor] togglePin error:', err)
+    }
+  }
+
   function handleKeyDown(e: React.KeyboardEvent) {
     if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
       e.preventDefault()
@@ -154,16 +174,38 @@ export function JournalEditor({
     <div className="min-h-screen flex flex-col" onKeyDown={handleKeyDown}>
       {/* ── Top bar ─────────────────────────────────────── */}
       <header className="flex items-center justify-between px-6 py-3 border-b border-[#E8E2D9]/60 bg-[#FAF8F5]/80 backdrop-blur-md shadow-[var(--shadow-xs)] sticky top-0 z-20">
-        <button
-          onClick={() => router.push('/')}
-          className="flex items-center gap-1.5 text-sm text-[#8B7D72] hover:text-[#2C2825] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C9E8A] rounded-md px-1"
-          aria-label="Back to dashboard"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="m15 18-6-6 6-6" />
-          </svg>
-          <span className="hidden sm:inline">Back</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => router.push('/')}
+            className="flex items-center gap-1.5 text-sm text-[#8B7D72] hover:text-[#2C2825] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C9E8A] rounded-md px-1"
+            aria-label="Back to dashboard"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="m15 18-6-6 6-6" />
+            </svg>
+            <span className="hidden sm:inline">Back</span>
+          </button>
+
+          {savedEntryIdRef.current && (
+            <button
+              onClick={handleTogglePin}
+              aria-label={isPinned ? 'Unpin entry' : 'Pin entry'}
+              title={isPinned ? 'Unpin' : 'Pin'}
+              className={`transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C9E8A] rounded-md p-1 ${isPinned ? 'text-[#7C9E8A]' : 'text-[#B5A99F] hover:text-[#7C9E8A]'}`}
+            >
+              {isPinned ? (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                  <path d="M16 1a1 1 0 0 0-2 0v1H10V1a1 1 0 0 0-2 0v1H7a2 2 0 0 0-2 2v1c0 2.97 1.88 5.49 4.5 6.33V20a1 1 0 0 0 2 0v-7.67C14.12 11.49 16 8.97 16 6V5h1V2a1 1 0 0 0-1-1z" />
+                </svg>
+              ) : (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="12" y1="17" x2="12" y2="22" />
+                  <path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z" />
+                </svg>
+              )}
+            </button>
+          )}
+        </div>
 
         <AutoSaveStatus status={status} />
 

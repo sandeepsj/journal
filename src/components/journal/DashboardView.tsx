@@ -9,6 +9,9 @@ import { EmptyState } from './EmptyState'
 import { LoadingDots } from '@/components/ui/LoadingDots'
 import { Modal } from '@/components/layout/Modal'
 import { useJournalEntries } from '@/hooks/useJournalEntries'
+import { usePinnedEntries } from '@/hooks/usePinnedEntries'
+import { PinnedRail } from './PinnedRail'
+import { PinLimitBanner } from './PinLimitBanner'
 
 export interface DashboardViewProps {
   userName: string
@@ -27,8 +30,11 @@ export function DashboardView({ userName }: DashboardViewProps) {
   const [search, setSearch] = useState('')
   const [deleteId, setDeleteId] = useState<string | null>(null)
 
-  const { entries, isLoading, error, hasMore, loadMore, deleteEntry } =
+  const { entries, isLoading, error, hasMore, loadMore, deleteEntry, setPinned } =
     useJournalEntries(search)
+
+  const { pinnedEntries, isLoading: pinnedLoading, pinError, clearPinError, togglePin } =
+    usePinnedEntries()
 
   async function confirmDelete() {
     if (!deleteId) return
@@ -72,6 +78,22 @@ export function DashboardView({ userName }: DashboardViewProps) {
           <path d="m9 18 6-6-6-6" />
         </svg>
       </button>
+
+      {/* Pinned rail */}
+      {(pinnedLoading || pinnedEntries.length > 0) && (
+        <div className="space-y-2">
+          {pinError && <PinLimitBanner message={pinError} onDismiss={clearPinError} />}
+          <PinnedRail
+            entries={pinnedEntries}
+            isLoading={pinnedLoading}
+            onEntryClick={(id) => router.push(`/journal/${id}`)}
+            onUnpin={(id) => {
+              togglePin(id, true)
+              setPinned(id, false)
+            }}
+          />
+        </div>
+      )}
 
       {/* Entry list header */}
       <div className="space-y-4">
@@ -130,6 +152,11 @@ export function DashboardView({ userName }: DashboardViewProps) {
                 {...entry}
                 onClick={() => router.push(`/journal/${entry.id}`)}
                 onDelete={() => setDeleteId(entry.id)}
+                isPinned={entry.pinned}
+                onPin={(meta) => {
+                  togglePin(entry.id, entry.pinned, meta)
+                  setPinned(entry.id, !entry.pinned)
+                }}
                 className={`stagger-${(index % 5) + 1}`}
               />
             ))}

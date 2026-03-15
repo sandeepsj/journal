@@ -12,6 +12,7 @@ interface UseJournalEntriesReturn {
   loadMore: () => void
   deleteEntry: (id: string) => Promise<void>
   refresh: () => void
+  setPinned: (id: string, pinned: boolean) => void
 }
 
 export function useJournalEntries(search: string): UseJournalEntriesReturn {
@@ -73,5 +74,9 @@ export function useJournalEntries(search: string): UseJournalEntriesReturn {
 
   const refresh = useCallback(() => fetchPage(1, true), [fetchPage])
 
-  return { entries, isLoading, error, hasMore, loadMore, deleteEntry, refresh }
+  const setPinned = useCallback((id: string, pinned: boolean) => {
+    setEntries((prev) => prev.map((e) => (e.id === id ? { ...e, pinned } : e)))
+  }, [])
+
+  return { entries, isLoading, error, hasMore, loadMore, deleteEntry, refresh, setPinned }
 }
