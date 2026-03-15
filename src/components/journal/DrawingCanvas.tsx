@@ -60,16 +60,18 @@ export function DrawingCanvas({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canvasRef])
 
-  // Keep snapshotRef in sync when initialData changes (load from DB or clear)
+  // Sync canvas pixels whenever initialData changes (undo/redo/clear/load from DB)
   useEffect(() => {
     snapshotRef.current = initialData ?? null
-    // If cleared externally, wipe the canvas too
-    if (!initialData) {
-      const canvas = canvasRef.current
-      if (canvas) {
-        const ctx = canvas.getContext('2d')
-        ctx?.clearRect(0, 0, canvas.width, canvas.height)
-      }
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    if (initialData) {
+      const img = new Image()
+      img.onload = () => ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+      img.src = initialData
     }
   }, [initialData, canvasRef])
 

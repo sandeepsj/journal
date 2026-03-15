@@ -22,6 +22,10 @@ function WriteModeWrapper() {
       erasing={erasing}
       onErasingChange={setErasing}
       onClearDrawing={() => alert('Clear!')}
+      canUndo={false}
+      canRedo={false}
+      onUndo={() => {}}
+      onRedo={() => {}}
     />
   )
 }
@@ -45,6 +49,10 @@ function DrawModeWrapper() {
       erasing={erasing}
       onErasingChange={setErasing}
       onClearDrawing={() => alert('Clear!')}
+      canUndo={false}
+      canRedo={false}
+      onUndo={() => {}}
+      onRedo={() => {}}
     />
   )
 }

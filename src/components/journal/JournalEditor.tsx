@@ -39,10 +39,14 @@ export function JournalEditor({
   const [brushSize, setBrushSize] = useState(2)
   const [erasing, setErasing] = useState(false)
   const [drawingData, setDrawingData] = useState<string | null>(initialDrawing)
+  const [canUndo, setCanUndo] = useState(false)
+  const [canRedo, setCanRedo] = useState(false)
 
   const bodyRef = useRef<HTMLTextAreaElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const savedEntryIdRef = useRef<string | null>(entryId ?? null)
+  const drawingHistoryRef = useRef<string[]>([])
+  const drawingFutureRef = useRef<string[]>([])
 
   const wordCount = useWordCount(body)
 
@@ -58,7 +62,46 @@ export function JournalEditor({
     if (!entryId) bodyRef.current?.focus()
   }, [entryId])
 
+  function pushToHistory(current: string | null) {
+    if (current !== null) {
+      drawingHistoryRef.current = [...drawingHistoryRef.current.slice(-29), current]
+    }
+    drawingFutureRef.current = []
+    setCanUndo(drawingHistoryRef.current.length > 0)
+    setCanRedo(false)
+  }
+
+  function handleDrawingChange(dataUrl: string) {
+    pushToHistory(drawingData)
+    setDrawingData(dataUrl)
+  }
+
+  function handleUndo() {
+    if (drawingHistoryRef.current.length === 0) return
+    const prev = drawingHistoryRef.current[drawingHistoryRef.current.length - 1]
+    drawingHistoryRef.current = drawingHistoryRef.current.slice(0, -1)
+    if (drawingData !== null) {
+      drawingFutureRef.current = [drawingData, ...drawingFutureRef.current]
+    }
+    setDrawingData(prev)
+    setCanUndo(drawingHistoryRef.current.length > 0)
+    setCanRedo(true)
+  }
+
+  function handleRedo() {
+    if (drawingFutureRef.current.length === 0) return
+    const next = drawingFutureRef.current[0]
+    drawingFutureRef.current = drawingFutureRef.current.slice(1)
+    if (drawingData !== null) {
+      drawingHistoryRef.current = [...drawingHistoryRef.current, drawingData]
+    }
+    setDrawingData(next)
+    setCanUndo(true)
+    setCanRedo(drawingFutureRef.current.length > 0)
+  }
+
   function handleClearDrawing() {
+    pushToHistory(drawingData)
     setDrawingData(null)
   }
 
@@ -96,6 +139,11 @@ export function JournalEditor({
     if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
       e.preventDefault()
       save()
+    }
+    if (mode === 'draw' && (e.metaKey || e.ctrlKey) && e.key === 'z') {
+      e.preventDefault()
+      if (e.shiftKey) handleRedo()
+      else handleUndo()
     }
   }
 
@@ -175,6 +223,10 @@ export function JournalEditor({
               erasing={erasing}
               onErasingChange={setErasing}
               onClearDrawing={handleClearDrawing}
+              canUndo={canUndo}
+              canRedo={canRedo}
+              onUndo={handleUndo}
+              onRedo={handleRedo}
             />
           </div>
 
@@ -203,7 +255,7 @@ export function JournalEditor({
               erasing={erasing}
               initialData={drawingData ?? undefined}
               canvasRef={canvasRef}
-              onChange={setDrawingData}
+              onChange={handleDrawingChange}
             />
           </div>
         </div>
