@@ -37,6 +37,7 @@ export function JournalEditor({
   const [textColor, setTextColor] = useState(initialTextColor)
   const [brushColor, setBrushColor] = useState('#2C2825')
   const [brushSize, setBrushSize] = useState(2)
+  const [eraserSize, setEraserSize] = useState(14)
   const [erasing, setErasing] = useState(false)
   const [drawingData, setDrawingData] = useState<string | null>(initialDrawing)
   const [canUndo, setCanUndo] = useState(false)
@@ -222,6 +223,8 @@ export function JournalEditor({
               onBrushSizeChange={setBrushSize}
               erasing={erasing}
               onErasingChange={setErasing}
+              eraserSize={eraserSize}
+              onEraserSizeChange={setEraserSize}
               onClearDrawing={handleClearDrawing}
               canUndo={canUndo}
               canRedo={canRedo}
@@ -252,6 +255,7 @@ export function JournalEditor({
               active={mode === 'draw'}
               brushColor={brushColor}
               brushSize={brushSize}
+              eraserSize={eraserSize}
               erasing={erasing}
               initialData={drawingData ?? undefined}
               canvasRef={canvasRef}

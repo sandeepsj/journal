@@ -8,6 +8,7 @@ function WriteModeWrapper() {
   const [textColor, setTextColor] = useState('#2C2825')
   const [brushColor, setBrushColor] = useState('#2C2825')
   const [brushSize, setBrushSize] = useState(2)
+  const [eraserSize, setEraserSize] = useState(14)
   const [erasing, setErasing] = useState(false)
   return (
     <DrawingToolbar
@@ -19,6 +20,8 @@ function WriteModeWrapper() {
       onBrushColorChange={setBrushColor}
       brushSize={brushSize}
       onBrushSizeChange={setBrushSize}
+      eraserSize={eraserSize}
+      onEraserSizeChange={setEraserSize}
       erasing={erasing}
       onErasingChange={setErasing}
       onClearDrawing={() => alert('Clear!')}
@@ -35,6 +38,7 @@ function DrawModeWrapper() {
   const [textColor, setTextColor] = useState('#2C2825')
   const [brushColor, setBrushColor] = useState('#7C9E8A')
   const [brushSize, setBrushSize] = useState(3)
+  const [eraserSize, setEraserSize] = useState(14)
   const [erasing, setErasing] = useState(false)
   return (
     <DrawingToolbar
@@ -46,6 +50,8 @@ function DrawModeWrapper() {
       onBrushColorChange={setBrushColor}
       brushSize={brushSize}
       onBrushSizeChange={setBrushSize}
+      eraserSize={eraserSize}
+      onEraserSizeChange={setEraserSize}
       erasing={erasing}
       onErasingChange={setErasing}
       onClearDrawing={() => alert('Clear!')}

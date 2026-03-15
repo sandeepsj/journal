@@ -1,5 +1,7 @@
 'use client'
 
+import { ColorPicker } from './ColorPicker'
+
 export interface DrawingToolbarProps {
   mode: 'write' | 'draw'
   onModeChange: (mode: 'write' | 'draw') => void
@@ -9,6 +11,8 @@ export interface DrawingToolbarProps {
   onBrushColorChange: (color: string) => void
   brushSize: number
   onBrushSizeChange: (size: number) => void
+  eraserSize: number
+  onEraserSizeChange: (size: number) => void
   erasing: boolean
   onErasingChange: (erasing: boolean) => void
   onClearDrawing: () => void
@@ -19,9 +23,15 @@ export interface DrawingToolbarProps {
 }
 
 const BRUSH_SIZES = [
-  { label: 'Fine', value: 1.5, dotSize: 4 },
-  { label: 'Medium', value: 3, dotSize: 7 },
-  { label: 'Thick', value: 6, dotSize: 11 },
+  { label: 'Fine',   value: 1.5, dotSize: 4  },
+  { label: 'Medium', value: 3,   dotSize: 7  },
+  { label: 'Thick',  value: 6,   dotSize: 11 },
+]
+
+const ERASER_SIZES = [
+  { label: 'Small',  value: 6,  dotSize: 5  },
+  { label: 'Medium', value: 14, dotSize: 9  },
+  { label: 'Large',  value: 28, dotSize: 14 },
 ]
 
 export function DrawingToolbar({
@@ -33,6 +43,8 @@ export function DrawingToolbar({
   onBrushColorChange,
   brushSize,
   onBrushSizeChange,
+  eraserSize,
+  onEraserSizeChange,
   erasing,
   onErasingChange,
   onClearDrawing,
@@ -65,7 +77,6 @@ export function DrawingToolbar({
               : 'text-[#8B7D72] hover:text-[#2C2825]'
           }`}
         >
-          {/* Pencil icon */}
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
           </svg>
@@ -80,7 +91,6 @@ export function DrawingToolbar({
               : 'text-[#8B7D72] hover:text-[#2C2825]'
           }`}
         >
-          {/* Brush icon */}
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="m9.06 11.9 8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08" />
             <path d="M7.07 14.94c-1.66 0-3 1.35-3 3.02 0 1.33-2.5 1.52-2 2.02 1 1 2.48 1.02 3.5 1.02 2.2 0 3-1.8 3-3.02 0-1.67-1.33-3.04-1.5-3.04z" />
@@ -90,66 +100,65 @@ export function DrawingToolbar({
 
       <div className="w-px h-5 bg-[#E8E2D9]" aria-hidden />
 
-      {/* Text color picker — Write mode only */}
+      {/* Write mode — text color */}
       {mode === 'write' && (
-        <label className="flex items-center gap-1.5 cursor-pointer" title="Text color">
-          <span className="text-[10px] text-[#8B7D72] font-medium uppercase tracking-wide">Ink</span>
-          <span
-            className="block w-5 h-5 rounded-full border-2 border-white shadow-[var(--shadow-xs)] ring-1 ring-[#E8E2D9]"
-            style={{ backgroundColor: textColor }}
-          />
-          <input
-            type="color"
-            value={textColor}
-            onChange={(e) => onTextColorChange(e.target.value)}
-            className="sr-only"
-            aria-label="Text color"
-          />
-        </label>
+        <ColorPicker value={textColor} onChange={onTextColorChange} label="Ink" />
       )}
 
       {/* Draw mode controls */}
       {mode === 'draw' && (
         <>
-          {/* Brush color */}
-          <label className="flex items-center gap-1.5 cursor-pointer" title="Brush color">
-            <span className="text-[10px] text-[#8B7D72] font-medium uppercase tracking-wide">Ink</span>
-            <span
-              className="block w-5 h-5 rounded-full border-2 border-white shadow-[var(--shadow-xs)] ring-1 ring-[#E8E2D9]"
-              style={{ backgroundColor: erasing ? '#D4CEC8' : brushColor }}
-            />
-            <input
-              type="color"
-              value={brushColor}
-              onChange={(e) => { onBrushColorChange(e.target.value); onErasingChange(false) }}
-              className="sr-only"
-              aria-label="Brush color"
-            />
-          </label>
+          {/* Brush / eraser color + size */}
+          {!erasing ? (
+            <>
+              <ColorPicker value={brushColor} onChange={onBrushColorChange} label="Ink" />
 
-          <div className="w-px h-5 bg-[#E8E2D9]" aria-hidden />
+              <div className="w-px h-5 bg-[#E8E2D9]" aria-hidden />
 
-          {/* Brush size presets */}
-          <div className="flex items-center gap-1" role="group" aria-label="Brush size">
-            {BRUSH_SIZES.map((s) => (
-              <button
-                key={s.value}
-                onClick={() => onBrushSizeChange(s.value)}
-                title={s.label}
-                aria-pressed={brushSize === s.value}
-                className={`flex items-center justify-center w-6 h-6 rounded-full transition-colors duration-150 ${
-                  brushSize === s.value && !erasing
-                    ? 'bg-[#EAF1EC]'
-                    : 'hover:bg-[#F2EEE8]'
-                }`}
-              >
-                <span
-                  className="rounded-full bg-current"
-                  style={{ width: s.dotSize, height: s.dotSize, color: brushColor }}
-                />
-              </button>
-            ))}
-          </div>
+              {/* Brush size */}
+              <div className="flex items-center gap-1" role="group" aria-label="Brush size">
+                {BRUSH_SIZES.map((s) => (
+                  <button
+                    key={s.value}
+                    onClick={() => onBrushSizeChange(s.value)}
+                    title={s.label}
+                    aria-pressed={brushSize === s.value}
+                    className={`flex items-center justify-center w-6 h-6 rounded-full transition-colors duration-150 ${
+                      brushSize === s.value ? 'bg-[#EAF1EC]' : 'hover:bg-[#F2EEE8]'
+                    }`}
+                  >
+                    <span
+                      className="rounded-full"
+                      style={{ width: s.dotSize, height: s.dotSize, backgroundColor: brushColor }}
+                    />
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : (
+            /* Eraser size */
+            <div className="flex items-center gap-1" role="group" aria-label="Eraser size">
+              <span className="text-[10px] text-[#8B7D72] font-medium uppercase tracking-wide mr-0.5">
+                Size
+              </span>
+              {ERASER_SIZES.map((s) => (
+                <button
+                  key={s.value}
+                  onClick={() => onEraserSizeChange(s.value)}
+                  title={s.label}
+                  aria-pressed={eraserSize === s.value}
+                  className={`flex items-center justify-center w-6 h-6 rounded-full transition-colors duration-150 ${
+                    eraserSize === s.value ? 'bg-[#EAF1EC]' : 'hover:bg-[#F2EEE8]'
+                  }`}
+                >
+                  <span
+                    className="rounded-full bg-[#D4CEC8]"
+                    style={{ width: s.dotSize, height: s.dotSize }}
+                  />
+                </button>
+              ))}
+            </div>
+          )}
 
           <div className="w-px h-5 bg-[#E8E2D9]" aria-hidden />
 
@@ -179,13 +188,15 @@ export function DrawingToolbar({
 
           <div className="w-px h-5 bg-[#E8E2D9]" aria-hidden />
 
-          {/* Eraser */}
+          {/* Eraser toggle */}
           <button
             onClick={() => onErasingChange(!erasing)}
             title="Eraser"
             aria-pressed={erasing}
             className={`flex items-center justify-center w-7 h-7 rounded-full transition-colors duration-150 ${
-              erasing ? 'bg-[#EAF1EC] text-[#7C9E8A]' : 'text-[#8B7D72] hover:text-[#2C2825] hover:bg-[#F2EEE8]'
+              erasing
+                ? 'bg-[#EAF1EC] text-[#7C9E8A]'
+                : 'text-[#8B7D72] hover:text-[#2C2825] hover:bg-[#F2EEE8]'
             }`}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

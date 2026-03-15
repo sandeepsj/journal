@@ -6,6 +6,7 @@ export interface DrawingCanvasProps {
   active: boolean
   brushColor: string
   brushSize: number
+  eraserSize?: number
   erasing?: boolean
   initialData?: string
   canvasRef: RefObject<HTMLCanvasElement | null>
@@ -16,6 +17,7 @@ export function DrawingCanvas({
   active,
   brushColor,
   brushSize,
+  eraserSize = 14,
   erasing = false,
   initialData,
   canvasRef,
@@ -98,7 +100,7 @@ export function DrawingCanvas({
 
     ctx.globalCompositeOperation = erasing ? 'destination-out' : 'source-over'
     ctx.strokeStyle = erasing ? 'rgba(0,0,0,1)' : brushColor
-    ctx.lineWidth = brushSize
+    ctx.lineWidth = erasing ? eraserSize : brushSize
     ctx.lineCap = 'round'
     ctx.lineJoin = 'round'
 
