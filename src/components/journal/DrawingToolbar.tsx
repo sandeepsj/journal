@@ -105,9 +105,35 @@ export function DrawingToolbar({
         <ColorPicker value={textColor} onChange={onTextColorChange} label="Ink" />
       )}
 
+      {/* Undo */}
+      <button
+        onClick={onUndo}
+        disabled={!canUndo}
+        title="Undo (⌘Z)"
+        className="flex items-center justify-center w-7 h-7 rounded-full transition-colors duration-150 disabled:opacity-30 disabled:cursor-not-allowed text-[#8B7D72] hover:text-[#2C2825] hover:bg-[#F2EEE8] disabled:hover:bg-transparent disabled:hover:text-[#8B7D72]"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 7v6h6" /><path d="M3 13A9 9 0 1 0 5.7 5.7L3 7" />
+        </svg>
+      </button>
+
+      {/* Redo */}
+      <button
+        onClick={onRedo}
+        disabled={!canRedo}
+        title="Redo (⌘⇧Z)"
+        className="flex items-center justify-center w-7 h-7 rounded-full transition-colors duration-150 disabled:opacity-30 disabled:cursor-not-allowed text-[#8B7D72] hover:text-[#2C2825] hover:bg-[#F2EEE8] disabled:hover:bg-transparent disabled:hover:text-[#8B7D72]"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 7v6h-6" /><path d="M21 13A9 9 0 1 1 18.3 5.7L21 7" />
+        </svg>
+      </button>
+
       {/* Draw mode controls */}
       {mode === 'draw' && (
         <>
+          <div className="w-px h-5 bg-[#E8E2D9]" aria-hidden />
+
           {/* Brush / eraser color + size */}
           {!erasing ? (
             <>
@@ -159,32 +185,6 @@ export function DrawingToolbar({
               ))}
             </div>
           )}
-
-          <div className="w-px h-5 bg-[#E8E2D9]" aria-hidden />
-
-          {/* Undo */}
-          <button
-            onClick={onUndo}
-            disabled={!canUndo}
-            title="Undo (⌘Z)"
-            className="flex items-center justify-center w-7 h-7 rounded-full transition-colors duration-150 disabled:opacity-30 disabled:cursor-not-allowed text-[#8B7D72] hover:text-[#2C2825] hover:bg-[#F2EEE8] disabled:hover:bg-transparent disabled:hover:text-[#8B7D72]"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M3 7v6h6" /><path d="M3 13A9 9 0 1 0 5.7 5.7L3 7" />
-            </svg>
-          </button>
-
-          {/* Redo */}
-          <button
-            onClick={onRedo}
-            disabled={!canRedo}
-            title="Redo (⌘⇧Z)"
-            className="flex items-center justify-center w-7 h-7 rounded-full transition-colors duration-150 disabled:opacity-30 disabled:cursor-not-allowed text-[#8B7D72] hover:text-[#2C2825] hover:bg-[#F2EEE8] disabled:hover:bg-transparent disabled:hover:text-[#8B7D72]"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 7v6h-6" /><path d="M21 13A9 9 0 1 1 18.3 5.7L21 7" />
-            </svg>
-          </button>
 
           <div className="w-px h-5 bg-[#E8E2D9]" aria-hidden />
 

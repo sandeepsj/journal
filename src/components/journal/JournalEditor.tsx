@@ -45,12 +45,19 @@ export function JournalEditor({
   const [drawingData, setDrawingData] = useState<string | null>(initialDrawing)
   const [canUndo, setCanUndo] = useState(false)
   const [canRedo, setCanRedo] = useState(false)
+  const [canUndoText, setCanUndoText] = useState(false)
+  const [canRedoText, setCanRedoText] = useState(false)
 
   const bodyRef = useRef<HTMLTextAreaElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const savedEntryIdRef = useRef<string | null>(entryId ?? null)
   const drawingHistoryRef = useRef<string[]>([])
   const drawingFutureRef = useRef<string[]>([])
+  const textHistoryRef = useRef<Array<{ title: string; body: string }>>([])
+  const textFutureRef = useRef<Array<{ title: string; body: string }>>([])
+  const textCurrentRef = useRef({ title: initialTitle, body: initialBody })
+  const textLastCommitRef = useRef({ title: initialTitle, body: initialBody })
+  const textDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const wordCount = useWordCount(body)
 
@@ -109,6 +116,50 @@ export function JournalEditor({
     setDrawingData(null)
   }
 
+  function commitTextHistory() {
+    const prev = textLastCommitRef.current
+    const curr = textCurrentRef.current
+    if (prev.title === curr.title && prev.body === curr.body) return
+    textHistoryRef.current = [...textHistoryRef.current.slice(-29), prev]
+    textFutureRef.current = []
+    textLastCommitRef.current = { ...curr }
+    setCanUndoText(textHistoryRef.current.length > 0)
+    setCanRedoText(false)
+  }
+
+  function scheduleTextHistoryPush() {
+    if (textDebounceRef.current) clearTimeout(textDebounceRef.current)
+    textDebounceRef.current = setTimeout(commitTextHistory, 500)
+  }
+
+  function handleTextUndo() {
+    if (textDebounceRef.current) { clearTimeout(textDebounceRef.current); textDebounceRef.current = null }
+    commitTextHistory()
+    if (textHistoryRef.current.length === 0) return
+    const prev = textHistoryRef.current[textHistoryRef.current.length - 1]
+    textHistoryRef.current = textHistoryRef.current.slice(0, -1)
+    textFutureRef.current = [{ ...textLastCommitRef.current }, ...textFutureRef.current]
+    setTitle(prev.title)
+    setBody(prev.body)
+    textCurrentRef.current = { ...prev }
+    textLastCommitRef.current = { ...prev }
+    setCanUndoText(textHistoryRef.current.length > 0)
+    setCanRedoText(true)
+  }
+
+  function handleTextRedo() {
+    if (textFutureRef.current.length === 0) return
+    const next = textFutureRef.current[0]
+    textFutureRef.current = textFutureRef.current.slice(1)
+    textHistoryRef.current = [...textHistoryRef.current, { ...textLastCommitRef.current }]
+    setTitle(next.title)
+    setBody(next.body)
+    textCurrentRef.current = { ...next }
+    textLastCommitRef.current = { ...next }
+    setCanUndoText(true)
+    setCanRedoText(textFutureRef.current.length > 0)
+  }
+
   const handleSave = useCallback(
     async (data: { title: string; body: string; mood: Mood | null; textColor: string; drawing: string | null }) => {
       const hasContent = data.title.trim() || data.body.trim()
@@ -165,6 +216,11 @@ export function JournalEditor({
       e.preventDefault()
       if (e.shiftKey) handleRedo()
       else handleUndo()
+    }
+    if (mode === 'write' && (e.metaKey || e.ctrlKey) && e.key === 'z') {
+      e.preventDefault()
+      if (e.shiftKey) handleTextRedo()
+      else handleTextUndo()
     }
   }
 
@@ -243,7 +299,12 @@ export function JournalEditor({
 
             <input
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => {
+                const v = e.target.value
+                setTitle(v)
+                textCurrentRef.current = { ...textCurrentRef.current, title: v }
+                scheduleTextHistoryPush()
+              }}
               placeholder="Title"
               maxLength={300}
               className="w-full text-5xl bg-transparent border-none outline-none ring-0 focus:outline-none focus:ring-0 placeholder:text-[#D4CEC8] leading-tight caret-[#7C9E8A]"
@@ -256,7 +317,7 @@ export function JournalEditor({
               paints above the drawing canvas (z-2), even though canvas has an
               explicit z-index and the toolbar's backdrop-filter creates a stacking
               context without one */}
-          <div className="flex justify-start px-6 py-2 border-b border-[#EAE4DC] relative z-10">
+          <div className="flex justify-start px-6 py-2 border-b border-[#EAE4DC] relative z-10 overflow-x-auto scrollbar-hide">
             <DrawingToolbar
               mode={mode}
               onModeChange={setMode}
@@ -271,10 +332,10 @@ export function JournalEditor({
               eraserSize={eraserSize}
               onEraserSizeChange={setEraserSize}
               onClearDrawing={handleClearDrawing}
-              canUndo={canUndo}
-              canRedo={canRedo}
-              onUndo={handleUndo}
-              onRedo={handleRedo}
+              canUndo={mode === 'draw' ? canUndo : canUndoText}
+              canRedo={mode === 'draw' ? canRedo : canRedoText}
+              onUndo={mode === 'draw' ? handleUndo : handleTextUndo}
+              onRedo={mode === 'draw' ? handleRedo : handleTextRedo}
             />
           </div>
 
@@ -283,7 +344,11 @@ export function JournalEditor({
             <textarea
               ref={bodyRef}
               value={body}
-              onChange={(e) => setBody(e.target.value)}
+              onChange={(e) => {
+                setBody(e.target.value)
+                textCurrentRef.current = { ...textCurrentRef.current, body: e.target.value }
+                scheduleTextHistoryPush()
+              }}
               placeholder="Start writing..."
               className="ruled-text w-full bg-transparent border-none outline-none ring-0 focus:outline-none focus:ring-0 resize-none placeholder:text-[#D4CEC8] text-[1.35rem] leading-[2.75rem] relative z-[1]"
               style={{
