@@ -16,6 +16,7 @@ export function useEemo(title: string, body: string): EemoState {
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const abortRef = useRef<AbortController | null>(null)
+  const lastSentContentRef = useRef<string>('')
 
   useEffect(() => {
     const content = `${title}\n\n${body}`.trim()
@@ -27,6 +28,11 @@ export function useEemo(title: string, body: string): EemoState {
     }
 
     if (content.length < 20) return
+
+    // Skip if content hasn't changed meaningfully since last API call
+    const last = lastSentContentRef.current
+    const lengthDiff = Math.abs(content.length - last.length)
+    if (last && lengthDiff < 50 && content.endsWith(last.slice(-30))) return
 
     debounceRef.current = setTimeout(async () => {
       // Cancel any in-flight request
@@ -51,6 +57,7 @@ export function useEemo(title: string, body: string): EemoState {
         const data = await res.json()
 
         if (data.emotion) {
+          lastSentContentRef.current = content
           setEmotion(data.emotion as Emotion)
           setMessage(data.message ?? null)
         }

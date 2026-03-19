@@ -161,4 +161,41 @@ describe('useEemo', () => {
     // Emotion should remain 'happy' (last known) after error
     expect(result.current.emotion).toBe('happy')
   })
+
+  it('skips API call when content changes by less than 50 chars with same ending', async () => {
+    let resolveFirst!: (v: unknown) => void
+    const firstPromise = new Promise((resolve) => { resolveFirst = resolve })
+
+    mockFetch.mockReturnValueOnce(
+      firstPromise.then(() => ({
+        ok: true,
+        json: async () => ({ emotion: 'calm', message: null }),
+      }))
+    )
+
+    const baseBody = 'Today was a pretty calm and ordinary day, nothing special happened'
+    const { rerender } = renderHook(
+      ({ body }) => useEemo('', body),
+      { initialProps: { body: baseBody } }
+    )
+
+    // First call fires and resolves
+    await act(async () => { vi.advanceTimersByTime(3100) })
+    await act(async () => {
+      resolveFirst(undefined)
+      await Promise.resolve()
+      await Promise.resolve()
+    })
+    expect(mockFetch).toHaveBeenCalledOnce()
+
+    // Tiny typo fix — same ending, length diff < 50 → should NOT call again
+    rerender({ body: baseBody.replace('ordinary', 'ordniary') })
+    await act(async () => {
+      vi.advanceTimersByTime(3100)
+      await Promise.resolve()
+      await Promise.resolve()
+    })
+
+    expect(mockFetch).toHaveBeenCalledOnce() // still only 1 call
+  })
 })
