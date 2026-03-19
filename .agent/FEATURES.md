@@ -82,6 +82,33 @@
 
 ---
 
+---
+
+### F6 — Eemo (Ambient Emotional Presence)
+
+Eemo is a silent, caring AI friend who lives in the journal editor. As the user writes, Eemo reads the entry and reacts with a small animated face reflecting the emotional tone. This is not a chatbot — it is ambient emotional presence.
+
+**Behaviour:**
+- Silent by default: shows an emotion face with no message most of the time
+- Speaks only for: distress/self-harm signals, strong grief, self-doubt spirals, notable breakthroughs/proud moments
+- Message: max 20 words, warm and brief, never advice-giving — a friend's reaction
+- Emotion updates continuously as text changes (3s debounce)
+- Message clears when a new emotion arrives (no stale messages)
+- Hidden until content exceeds 20 characters
+
+**Technical implementation:**
+- `POST /api/eemo` — auth-required, calls `claude-haiku-4-5-20251001`, returns `{ emotion, message | null }`
+- `useEemo(title, body)` hook — 3s debounce, AbortController per call, returns `EemoState`
+- `<EemoWidget />` — `position: absolute; bottom-right` within the ruled writing area, 80px face
+- Library: `react-emotion-face` v1.0.2 (21 emotions available)
+- Respects `prefers-reduced-motion` (face animation disabled if set)
+
+**Files:**
+- `src/app/api/eemo/route.ts`
+- `src/hooks/useEemo.ts` + `src/hooks/useEemo.test.ts`
+- `src/components/journal/EemoWidget.tsx` + `EemoWidget.stories.tsx`
+- `src/components/journal/JournalEditor.tsx` (modified to integrate)
+
 ## Non-Features (Explicitly Out of Scope)
 
 - No social/sharing features — fully private

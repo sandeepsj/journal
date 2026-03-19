@@ -11,6 +11,8 @@ import { DrawingToolbar } from './DrawingToolbar'
 import { useAutoSave } from '@/hooks/useAutoSave'
 import { useWordCount } from '@/hooks/useWordCount'
 import { useEntrySync, type FreshEntryData } from '@/hooks/useEntrySync'
+import { useEemo } from '@/hooks/useEemo'
+import { EemoWidget } from './EemoWidget'
 import type { Mood } from '@/types/journal'
 
 export interface JournalEditorProps {
@@ -61,6 +63,7 @@ export function JournalEditor({
   const textDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const wordCount = useWordCount(body)
+  const { emotion: eemoEmotion, message: eemoMessage, isLoading: eemoLoading } = useEemo(title, body)
 
   // Auto-resize textarea — must stay in sync with ruled lines
   useEffect(() => {
@@ -432,6 +435,7 @@ export function JournalEditor({
               sizeRef={bodyRef}
               onChange={handleDrawingChange}
             />
+            <EemoWidget emotion={eemoEmotion} message={eemoMessage} isLoading={eemoLoading} />
           </div>
         </div>
       </div>
