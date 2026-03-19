@@ -40,14 +40,14 @@ interface EemoPosition {
 }
 
 const POSITIONS: EemoPosition[] = [
-  { id: 'inside',       cx: 172, cy: 155, size: 28, weight: 10 },
-  { id: 'peeking',      cx: 172, cy: 141, size: 36, weight: 8  },
-  { id: 'on_swing',     cx: 34,  cy: 120, size: 36, weight: 12 },
-  { id: 'playground_a', cx: 75,  cy: 148, size: 46, weight: 15 },
-  { id: 'playground_b', cx: 108, cy: 148, size: 46, weight: 25 }, // most common
-  { id: 'playground_c', cx: 133, cy: 148, size: 46, weight: 15 },
-  { id: 'playground_d', cx: 55,  cy: 148, size: 42, weight: 10 },
-  { id: 'on_roof',      cx: 172, cy: 104, size: 36, weight: 5  }, // rare
+  { id: 'inside',       cx: 172, cy: 152, size: 36, weight: 10 },
+  { id: 'peeking',      cx: 172, cy: 136, size: 44, weight: 8  },
+  { id: 'on_swing',     cx: 34,  cy: 116, size: 44, weight: 12 },
+  { id: 'playground_a', cx: 75,  cy: 144, size: 56, weight: 15 },
+  { id: 'playground_b', cx: 108, cy: 144, size: 56, weight: 25 }, // most common
+  { id: 'playground_c', cx: 133, cy: 144, size: 56, weight: 15 },
+  { id: 'playground_d', cx: 55,  cy: 144, size: 52, weight: 10 },
+  { id: 'on_roof',      cx: 172, cy: 100, size: 44, weight: 5  }, // rare
 ]
 
 // Weighted random — call once per page load
