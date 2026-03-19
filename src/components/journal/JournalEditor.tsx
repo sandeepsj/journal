@@ -10,6 +10,7 @@ import { DrawingCanvas } from './DrawingCanvas'
 import { DrawingToolbar } from './DrawingToolbar'
 import { useAutoSave } from '@/hooks/useAutoSave'
 import { useWordCount } from '@/hooks/useWordCount'
+import { useEntrySync, type FreshEntryData } from '@/hooks/useEntrySync'
 import type { Mood } from '@/types/journal'
 
 export interface JournalEditorProps {
@@ -160,6 +161,28 @@ export function JournalEditor({
     setCanRedoText(textFutureRef.current.length > 0)
   }
 
+  const handleReload = useCallback((data: FreshEntryData) => {
+    setTitle(data.title)
+    setBody(data.body)
+    setMood(data.mood as Mood | null)
+    setTextColor(data.textColor)
+    setDrawingData(data.drawing)
+    // Reset all history so stale undo steps can't be replayed
+    textHistoryRef.current = []
+    textFutureRef.current = []
+    textCurrentRef.current = { title: data.title, body: data.body }
+    textLastCommitRef.current = { title: data.title, body: data.body }
+    drawingHistoryRef.current = []
+    drawingFutureRef.current = []
+    setCanUndoText(false)
+    setCanRedoText(false)
+    setCanUndo(false)
+    setCanRedo(false)
+  }, [])
+
+  // Ref so handleSave can call notifySaved without a closure dep
+  const notifySavedRef = useRef<() => void>(() => {})
+
   const handleSave = useCallback(
     async (data: { title: string; body: string; mood: Mood | null; textColor: string; drawing: string | null }) => {
       const hasContent = data.title.trim() || data.body.trim()
@@ -180,15 +203,31 @@ export function JournalEditor({
         const json = await res.json()
         savedEntryIdRef.current = json.id
       }
+      notifySavedRef.current()
     },
     []
   )
 
-  const { status, save } = useAutoSave({
+  // autoSaveEnabled state lets us pass !isStale to useAutoSave without a circular dep:
+  // useAutoSave → isDirty → useEntrySync → isStale → useAutoSave(enabled)
+  const [autoSaveEnabled, setAutoSaveEnabled] = useState(true)
+
+  const { status, save, isDirty } = useAutoSave({
     data: { title, body, mood, textColor, drawing: drawingData },
     onSave: handleSave,
     interval: 30000,
+    enabled: autoSaveEnabled,
   })
+
+  const { isStale, notifySaved, fetchAndReload, dismissStale } = useEntrySync(
+    savedEntryIdRef.current,
+    isDirty,
+    handleReload
+  )
+
+  // Keep ref and autoSaveEnabled in sync with resolved values
+  useEffect(() => { notifySavedRef.current = notifySaved }, [notifySaved])
+  useEffect(() => { setAutoSaveEnabled(!isStale) }, [isStale])
 
   async function handleTogglePin() {
     if (!savedEntryIdRef.current) return
@@ -312,6 +351,27 @@ export function JournalEditor({
               aria-label="Entry title"
             />
           </div>
+
+          {/* Stale banner — shown when another tab saved this entry while this tab has unsaved edits */}
+          {isStale && (
+            <div className="flex items-center justify-between px-6 py-2 bg-[#FDF6EC] border-b border-[#F0E0C0] text-sm text-[#8B6914]">
+              <span>This entry was saved in another tab.</span>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={fetchAndReload}
+                  className="font-medium underline underline-offset-2 hover:text-[#6B5010] transition-colors"
+                >
+                  Reload
+                </button>
+                <button
+                  onClick={dismissStale}
+                  className="text-[#B5A99F] hover:text-[#8B7D72] transition-colors"
+                >
+                  Keep mine
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Drawing toolbar — relative + z-10 ensures the color picker dropdown
               paints above the drawing canvas (z-2), even though canvas has an
