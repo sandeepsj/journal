@@ -23,10 +23,12 @@ export function Card({
     <Tag
       onClick={onClick}
       className={[
-        glass ? 'glass border rounded-xl p-5' : 'bg-white border border-[#E8E2D9] rounded-xl p-5',
+        glass
+          ? 'glass border rounded-xl p-5'
+          : 'bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-5',
         'shadow-[var(--shadow-xs)]',
         interactive
-          ? 'transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)] hover:border-[#B5A99F] cursor-pointer'
+          ? 'transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)] hover:border-[var(--color-text-muted)] cursor-pointer'
           : '',
         className,
       ]

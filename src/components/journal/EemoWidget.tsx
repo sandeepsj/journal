@@ -124,15 +124,15 @@ export function EemoWidget({ emotion, message, isLoading: _isLoading }: EemoWidg
           <div
             className="relative rounded-2xl rounded-bl-none px-3.5 py-2.5 shadow-sm"
             style={{
-              background: '#FFFDF9',
-              border: '1px solid #E8E2D9',
+              background: 'var(--color-surface)',
+              border: '1px solid var(--color-border)',
               maxWidth: 158,
               minWidth: 90,
             }}
           >
             <p
-              className="text-[0.74rem] leading-snug"
-              style={{ color: '#4A3F38', fontFamily: 'var(--font-geist-sans, sans-serif)' }}
+              className="text-[0.74rem] leading-snug text-[var(--color-text-primary)]"
+              style={{ fontFamily: 'var(--font-geist-sans, sans-serif)' }}
             >
               {shownMessage}
             </p>
@@ -142,10 +142,10 @@ export function EemoWidget({ emotion, message, isLoading: _isLoading }: EemoWidg
               style={{ bottom: -9, left: 14 }}
               width="16" height="10" viewBox="0 0 16 10" fill="none"
             >
-              <path d="M0 0 L8 10 L16 0 Z" fill="#FFFDF9" />
-              <line x1="0" y1="0.5" x2="16" y2="0.5" stroke="#FFFDF9" strokeWidth="1.5" />
-              <line x1="0" y1="0" x2="8" y2="10" stroke="#E8E2D9" strokeWidth="1" />
-              <line x1="16" y1="0" x2="8" y2="10" stroke="#E8E2D9" strokeWidth="1" />
+              <path d="M0 0 L8 10 L16 0 Z" fill="var(--color-surface)" />
+              <line x1="0" y1="0.5" x2="16" y2="0.5" stroke="var(--color-surface)" strokeWidth="1.5" />
+              <line x1="0" y1="0" x2="8" y2="10" stroke="var(--color-border)" strokeWidth="1" />
+              <line x1="16" y1="0" x2="8" y2="10" stroke="var(--color-border)" strokeWidth="1" />
             </svg>
           </div>
         </div>

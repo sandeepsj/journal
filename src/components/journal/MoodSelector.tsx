@@ -27,10 +27,10 @@ export function MoodSelector({ value, onChange }: MoodSelectorProps) {
             aria-pressed={selected}
             title={mood.label}
             className={[
-              'w-8 h-8 rounded-lg text-base flex items-center justify-center transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C9E8A]',
+              'w-8 h-8 rounded-lg text-base flex items-center justify-center transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]',
               selected
-                ? 'bg-[#EAF1EC] scale-110'
-                : 'opacity-40 hover:opacity-80 hover:bg-[#F2EEE8]',
+                ? 'bg-[var(--color-accent-light)] scale-110'
+                : 'opacity-40 hover:opacity-80 hover:bg-[var(--color-surface-muted)]',
             ].join(' ')}
           >
             <span role="img" aria-hidden="true">{mood.emoji}</span>

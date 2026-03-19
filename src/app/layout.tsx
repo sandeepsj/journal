@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Kalam, Inter } from 'next/font/google'
 import './globals.css'
+import { ThemeProvider } from '@/components/layout/ThemeProvider'
 
 const kalam = Kalam({
   variable: '--font-kalam',
@@ -22,9 +23,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${kalam.variable} ${inter.variable}`}>
-      <body className="antialiased bg-[#FAF8F5] text-[#2C2825] font-sans">
-        {children}
+    <html lang="en" suppressHydrationWarning className={`${kalam.variable} ${inter.variable}`}>
+      <body className="antialiased font-sans">
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   )

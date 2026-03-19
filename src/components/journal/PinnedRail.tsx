@@ -13,7 +13,7 @@ export function PinnedRail({ entries, isLoading, onEntryClick, onUnpin }: Pinned
 
   return (
     <div className="space-y-2">
-      <h2 className="text-base font-medium text-[#8B7D72] uppercase tracking-wide">Pinned</h2>
+      <h2 className="text-base font-medium text-[var(--color-text-secondary)] uppercase tracking-wide">Pinned</h2>
 
       <div className="relative">
         {/* Scroll container */}
@@ -22,7 +22,7 @@ export function PinnedRail({ entries, isLoading, onEntryClick, onUnpin }: Pinned
             ? Array.from({ length: 3 }).map((_, i) => (
                 <div
                   key={i}
-                  className="w-[200px] h-[120px] flex-shrink-0 rounded-xl bg-[#F2EEE8] animate-pulse"
+                  className="w-[200px] h-[120px] flex-shrink-0 rounded-xl bg-[var(--color-surface-muted)] animate-pulse"
                 />
               ))
             : entries.map((entry) => (
@@ -37,7 +37,7 @@ export function PinnedRail({ entries, isLoading, onEntryClick, onUnpin }: Pinned
 
         {/* Right-edge fade — signals more content */}
         {!isLoading && entries.length > 0 && (
-          <div className="absolute right-0 inset-y-0 w-10 bg-gradient-to-l from-[#FAF8F5] pointer-events-none" />
+          <div className="absolute right-0 inset-y-0 w-10 bg-gradient-to-l from-[var(--color-bg)] pointer-events-none" />
         )}
       </div>
     </div>

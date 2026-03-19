@@ -9,16 +9,16 @@ export default async function LoginPage() {
     <main className="min-h-screen flex items-center justify-center px-4">
       <div className="animate-page-enter flex flex-col items-center gap-8 w-full max-w-sm">
         <div className="text-center space-y-2">
-          <h1 className="font-serif text-5xl font-normal tracking-tight text-[#2C2825]">
+          <h1 className="font-serif text-5xl font-normal tracking-tight text-[var(--color-text-primary)]">
             Muse
           </h1>
-          <p className="text-[#8B7D72] text-lg">A space to remember yourself</p>
+          <p className="text-[var(--color-text-secondary)] text-lg">A space to remember yourself</p>
         </div>
 
-        <div className="bg-white border border-[#E8E2D9] rounded-xl p-8 w-full shadow-sm space-y-6">
+        <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-8 w-full shadow-sm space-y-6">
           <div className="text-center">
-            <p className="text-[#2C2825] font-medium">Welcome back</p>
-            <p className="text-[#B5A99F] text-sm mt-1">Sign in to continue your journey</p>
+            <p className="text-[var(--color-text-primary)] font-medium">Welcome back</p>
+            <p className="text-[var(--color-text-muted)] text-sm mt-1">Sign in to continue your journey</p>
           </div>
 
           <form
@@ -29,7 +29,7 @@ export default async function LoginPage() {
           >
             <button
               type="submit"
-              className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-lg border border-[#E8E2D9] bg-white hover:bg-[#F2EEE8] transition-colors duration-150 text-base font-medium text-[#2C2825]"
+              className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-muted)] transition-colors duration-150 text-base font-medium text-[var(--color-text-primary)]"
             >
               <GoogleIcon />
               Continue with Google

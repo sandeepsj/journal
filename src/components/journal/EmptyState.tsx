@@ -21,8 +21,8 @@ export function EmptyState({
         📓
       </div>
 
-      <h2 className="font-serif text-2xl text-[#2C2825] mb-2">{title}</h2>
-      <p className="text-sm text-[#8B7D72] max-w-xs leading-relaxed mb-6">{description}</p>
+      <h2 className="font-serif text-2xl text-[var(--color-text-primary)] mb-2">{title}</h2>
+      <p className="text-sm text-[var(--color-text-secondary)] max-w-xs leading-relaxed mb-6">{description}</p>
 
       {action && (
         <Button variant="primary" onClick={action.onClick}>

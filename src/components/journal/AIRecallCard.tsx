@@ -10,15 +10,15 @@ export interface AIRecallCardProps {
 
 export function AIRecallCard({ title, excerpt, createdAt, mood: _mood }: AIRecallCardProps) {
   return (
-    <div className="bg-[#FAFAF9] border-l-2 border-[#7C9E8A] pl-3 py-1 rounded-r-md shadow-[var(--shadow-xs)] hover:shadow-[var(--shadow-sm)] hover:border-l-[#6A9B77] transition-[box-shadow,border-color] duration-150">
+    <div className="bg-[var(--color-surface-muted)] border-l-2 border-[var(--color-accent)] pl-3 py-1 rounded-r-md shadow-[var(--shadow-xs)] hover:shadow-[var(--shadow-sm)] hover:border-l-[var(--color-success)] transition-[box-shadow,border-color] duration-150">
       <div className="flex items-center gap-2 mb-1">
-        <span className="text-[10px] font-medium text-[#7C9E8A] uppercase tracking-wide">
+        <span className="text-[10px] font-medium text-[var(--color-accent)] uppercase tracking-wide">
           Recalled from
         </span>
         <DateStamp date={createdAt} format="short" />
       </div>
-      <p className="text-base font-serif text-[#2C2825] mb-0.5 line-clamp-1">{title}</p>
-      <p className="text-sm font-serif text-[#8B7D72] line-clamp-2 leading-relaxed">{excerpt}</p>
+      <p className="text-base font-serif text-[var(--color-text-primary)] mb-0.5 line-clamp-1">{title}</p>
+      <p className="text-sm font-serif text-[var(--color-text-secondary)] line-clamp-2 leading-relaxed">{excerpt}</p>
     </div>
   )
 }

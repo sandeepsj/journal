@@ -271,11 +271,11 @@ export function JournalEditor({
   return (
     <div className="min-h-screen flex flex-col" onKeyDown={handleKeyDown}>
       {/* ── Top bar ─────────────────────────────────────── */}
-      <header className="flex items-center justify-between px-6 py-3 border-b border-[#E8E2D9]/60 bg-[#FAF8F5]/80 backdrop-blur-md shadow-[var(--shadow-xs)] sticky top-0 z-20">
+      <header className="flex items-center justify-between px-6 py-3 border-b border-[var(--color-border)]/60 bg-[var(--color-bg)]/80 backdrop-blur-md shadow-[var(--shadow-xs)] sticky top-0 z-20">
         <div className="flex items-center gap-2">
           <button
             onClick={() => router.push('/')}
-            className="flex items-center gap-1.5 text-sm text-[#8B7D72] hover:text-[#2C2825] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C9E8A] rounded-md px-1"
+            className="flex items-center gap-1.5 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] rounded-md px-1"
             aria-label="Back to dashboard"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -289,7 +289,7 @@ export function JournalEditor({
               onClick={handleTogglePin}
               aria-label={isPinned ? 'Unpin entry' : 'Pin entry'}
               title={isPinned ? 'Unpin' : 'Pin'}
-              className={`transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C9E8A] rounded-md p-1 ${isPinned ? 'text-[#7C9E8A]' : 'text-[#B5A99F] hover:text-[#7C9E8A]'}`}
+              className={`transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] rounded-md p-1 ${isPinned ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-muted)] hover:text-[var(--color-accent)]'}`}
             >
               {isPinned ? (
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none">
@@ -316,7 +316,7 @@ export function JournalEditor({
           aria-label="Save entry (Cmd+Enter)"
         >
           <span className="hidden sm:inline mr-1">Save</span>
-          <kbd className="text-[10px] text-[#B5A99F] font-mono bg-[#F2EEE8] px-1.5 py-0.5 rounded border border-[#E8E2D9]">
+          <kbd className="text-[10px] text-[var(--color-text-muted)] font-mono bg-[var(--color-surface-muted)] px-1.5 py-0.5 rounded border border-[var(--color-border)]">
             ⌘↵
           </kbd>
         </Button>
@@ -329,8 +329,8 @@ export function JournalEditor({
           style={{ minHeight: 'calc(100vh - 10rem)' }}
         >
           {/* Paper header — date + title, above the ruled lines */}
-          <div className="pt-8 pb-4 pr-6 border-b border-[#EAE4DC]" style={{ paddingLeft: 'calc(var(--rule-margin) + 1.25rem)' }}>
-            <p className="text-sm text-[#B5A99F] mb-4 tabular-nums">
+          <div className="pt-8 pb-4 pr-6 border-b border-[var(--color-paper-line)]" style={{ paddingLeft: 'calc(var(--rule-margin) + 1.25rem)' }}>
+            <p className="text-sm text-[var(--color-text-muted)] mb-4 tabular-nums">
               {new Date().toLocaleDateString('en-US', {
                 weekday: 'long',
                 year: 'numeric',
@@ -349,7 +349,7 @@ export function JournalEditor({
               }}
               placeholder="Title"
               maxLength={300}
-              className="w-full text-5xl bg-transparent border-none outline-none ring-0 focus:outline-none focus:ring-0 placeholder:text-[#D4CEC8] leading-tight caret-[#7C9E8A]"
+              className="w-full text-5xl bg-transparent border-none outline-none ring-0 focus:outline-none focus:ring-0 placeholder:text-[var(--color-dot-pattern)] leading-tight caret-[var(--color-accent)]"
               style={{ color: textColor, fontFamily: 'var(--font-kalam)' }}
               aria-label="Entry title"
             />
@@ -357,18 +357,18 @@ export function JournalEditor({
 
           {/* Stale banner — shown when another tab saved this entry while this tab has unsaved edits */}
           {isStale && (
-            <div className="flex items-center justify-between px-6 py-2 bg-[#FDF6EC] border-b border-[#F0E0C0] text-sm text-[#8B6914]">
+            <div className="flex items-center justify-between px-6 py-2 bg-[#FDF6EC] dark:bg-[#2E2210] border-b border-[#F0E0C0] dark:border-[#4A3A1A] text-sm text-[#8B6914] dark:text-[#D4A030]">
               <span>This entry was saved in another tab.</span>
               <div className="flex items-center gap-3">
                 <button
                   onClick={fetchAndReload}
-                  className="font-medium underline underline-offset-2 hover:text-[#6B5010] transition-colors"
+                  className="font-medium underline underline-offset-2 hover:opacity-80 transition-opacity"
                 >
                   Reload
                 </button>
                 <button
                   onClick={dismissStale}
-                  className="text-[#B5A99F] hover:text-[#8B7D72] transition-colors"
+                  className="text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
                 >
                   Keep mine
                 </button>
@@ -380,7 +380,7 @@ export function JournalEditor({
               paints above the drawing canvas (z-2), even though canvas has an
               explicit z-index and the toolbar's backdrop-filter creates a stacking
               context without one */}
-          <div className="flex justify-start px-6 py-2 border-b border-[#EAE4DC] relative z-10 overflow-x-auto scrollbar-hide">
+          <div className="flex justify-start px-6 py-2 border-b border-[var(--color-paper-line)] relative z-10 overflow-x-auto scrollbar-hide">
             <DrawingToolbar
               mode={mode}
               onModeChange={setMode}
@@ -413,9 +413,9 @@ export function JournalEditor({
                 scheduleTextHistoryPush()
               }}
               placeholder="Start writing..."
-              className="ruled-text w-full bg-transparent border-none outline-none ring-0 focus:outline-none focus:ring-0 resize-none placeholder:text-[#D4CEC8] text-[1.35rem] leading-[2.75rem] relative z-[1]"
+              className="ruled-text w-full bg-transparent border-none outline-none ring-0 focus:outline-none focus:ring-0 resize-none placeholder:text-[var(--color-dot-pattern)] text-[1.35rem] leading-[2.75rem] relative z-[1]"
               style={{
-                caretColor: '#7C9E8A',
+                caretColor: 'var(--color-accent)',
                 minHeight: 'calc(var(--rule-h) * 12)',
                 fontFamily: 'var(--font-kalam)',
                 color: textColor,
@@ -440,7 +440,7 @@ export function JournalEditor({
       </div>
 
       {/* ── Bottom bar ──────────────────────────────────── */}
-      <footer className="sticky bottom-0 flex items-center justify-between px-6 py-3 border-t border-[#E8E2D9]/60 bg-[#FAF8F5]/80 backdrop-blur-md shadow-[0_-2px_8px_rgba(44,40,37,0.06)]">
+      <footer className="sticky bottom-0 flex items-center justify-between px-6 py-3 border-t border-[var(--color-border)]/60 bg-[var(--color-bg)]/80 backdrop-blur-md shadow-[var(--shadow-sm)]">
         <MoodSelector value={mood} onChange={setMood} />
         <WordCount count={wordCount} />
       </footer>

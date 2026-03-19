@@ -97,10 +97,10 @@ export function RecallPanel({ expanded = false }: RecallPanelProps) {
   }
 
   return (
-    <div className="bg-white/80 backdrop-blur-sm border border-[#E8E2D9]/60 rounded-2xl overflow-hidden shadow-[var(--shadow-md)]">
+    <div className="bg-[var(--color-surface)]/80 backdrop-blur-sm border border-[var(--color-border)]/60 rounded-2xl overflow-hidden shadow-[var(--shadow-md)]">
       {/* Input */}
-      <form onSubmit={handleSubmit} className={`flex items-center gap-3 bg-gradient-to-b from-[#FEFCFA] to-white ${expanded ? 'px-5 py-4' : 'px-4 py-3'}`}>
-        <span className="text-[#B5A99F] flex-shrink-0" aria-hidden="true">
+      <form onSubmit={handleSubmit} className={`flex items-center gap-3 bg-[var(--color-surface)] ${expanded ? 'px-5 py-4' : 'px-4 py-3'}`}>
+        <span className="text-[var(--color-text-muted)] flex-shrink-0" aria-hidden="true">
           <svg width={expanded ? 20 : 16} height={expanded ? 20 : 16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z" />
             <path d="M12 8v4l3 3" />
@@ -111,7 +111,7 @@ export function RecallPanel({ expanded = false }: RecallPanelProps) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Ask your journal… e.g. When did I last feel at peace?"
-          className="flex-1 bg-transparent border-none outline-none text-[#2C2825] placeholder:text-[#B5A99F] text-base"
+          className="flex-1 bg-transparent border-none outline-none text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] text-base"
           aria-label="Ask your journal a question"
           disabled={isStreaming}
           autoFocus={expanded}
@@ -135,15 +135,15 @@ export function RecallPanel({ expanded = false }: RecallPanelProps) {
 
       {/* Results */}
       {hasAsked && (
-        <div className="border-t border-[#E8E2D9]/60 px-5 py-5 space-y-5 animate-scale-in bg-gradient-to-b from-white/60 to-white">
+        <div className="border-t border-[var(--color-border)]/60 px-5 py-5 space-y-5 animate-scale-in bg-[var(--color-surface)]">
           {/* Streaming answer */}
           {(answer || isStreaming) && (
             <div>
-              <p className="leading-relaxed text-[#2C2825] font-serif whitespace-pre-wrap text-base">
+              <p className="leading-relaxed text-[var(--color-text-primary)] font-serif whitespace-pre-wrap text-base">
                 {answer}
                 {isStreaming && !answer && <LoadingDots size="sm" />}
                 {isStreaming && answer && (
-                  <span className="inline-block w-0.5 h-4 bg-[#7C9E8A] animate-cursor-blink ml-0.5 align-text-bottom" />
+                  <span className="inline-block w-0.5 h-4 bg-[var(--color-accent)] animate-cursor-blink ml-0.5 align-text-bottom" />
                 )}
               </p>
             </div>
@@ -151,13 +151,13 @@ export function RecallPanel({ expanded = false }: RecallPanelProps) {
 
           {/* Error */}
           {error && (
-            <p className="text-[#C4614E] text-base">{error}</p>
+            <p className="text-[var(--color-error)] text-base">{error}</p>
           )}
 
           {/* Citations */}
           {citations.length > 0 && (
             <div>
-              <p className="text-xs font-medium text-[#B5A99F] uppercase tracking-wide mb-3">
+              <p className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wide mb-3">
                 From your journal
               </p>
               <div className="space-y-3">

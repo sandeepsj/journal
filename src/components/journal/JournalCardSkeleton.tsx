@@ -3,7 +3,7 @@ import { Skeleton } from '@/components/ui/Skeleton'
 export function JournalCardSkeleton() {
   return (
     <div
-      className="bg-white border border-[#E8E2D9] rounded-xl p-5 space-y-3"
+      className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-5 space-y-3"
       aria-hidden="true"
     >
       <div className="flex items-center justify-between gap-3">

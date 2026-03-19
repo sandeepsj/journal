@@ -136,18 +136,18 @@ export function ColorPicker({ value, onChange, label }: ColorPickerProps) {
     <div ref={containerRef} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C9E8A] rounded"
+        className="flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] rounded"
         title={label}
         aria-haspopup="dialog"
         aria-expanded={open}
       >
         {label && (
-          <span className="text-[10px] text-[#8B7D72] font-medium uppercase tracking-wide">
+          <span className="text-[10px] text-[var(--color-text-secondary)] font-medium uppercase tracking-wide">
             {label}
           </span>
         )}
         <span
-          className="block w-5 h-5 rounded-full border-2 border-white shadow-[var(--shadow-xs)] ring-1 ring-[#E8E2D9] transition-transform hover:scale-110"
+          className="block w-5 h-5 rounded-full border-2 border-[var(--color-surface)] shadow-[var(--shadow-xs)] ring-1 ring-[var(--color-border)] transition-transform hover:scale-110"
           style={{ backgroundColor: value }}
         />
       </button>
@@ -156,7 +156,7 @@ export function ColorPicker({ value, onChange, label }: ColorPickerProps) {
         <div
           role="dialog"
           aria-label="Color picker"
-          className="absolute top-full left-0 mt-2 z-50 bg-white rounded-2xl shadow-[var(--shadow-xl)] border border-[#E8E2D9] p-3 select-none"
+          className="absolute top-full left-0 mt-2 z-50 bg-[var(--color-surface)] rounded-2xl shadow-[var(--shadow-xl)] border border-[var(--color-border)] p-3 select-none"
           style={{ width: 216 }}
         >
           {/* Saturation / brightness gradient square */}
@@ -166,7 +166,6 @@ export function ColorPicker({ value, onChange, label }: ColorPickerProps) {
             style={{
               height: 130,
               backgroundColor: pureHue,
-              // black-to-transparent MUST be on top so bottom-left corner is black, not white
               backgroundImage: `linear-gradient(to bottom, transparent, #000000),
                                 linear-gradient(to right, #ffffff, rgba(255, 255, 255, 0))`,
             }}
@@ -230,14 +229,14 @@ export function ColorPicker({ value, onChange, label }: ColorPickerProps) {
                   setHue(h); setSat(s); setVal(v); setHexInput(c)
                   setOpen(false)
                 }}
-                className="rounded-full transition-transform hover:scale-125 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#7C9E8A]"
+                className="rounded-full transition-transform hover:scale-125 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--color-accent)]"
                 style={{
                   width: 16,
                   height: 16,
                   backgroundColor: c,
                   boxShadow:
                     c.toLowerCase() === value.toLowerCase()
-                      ? '0 0 0 2px white, 0 0 0 3.5px #7C9E8A'
+                      ? '0 0 0 2px var(--color-surface), 0 0 0 3.5px var(--color-accent)'
                       : '0 0 0 1px rgba(0,0,0,0.12)',
                 }}
               />
@@ -247,7 +246,7 @@ export function ColorPicker({ value, onChange, label }: ColorPickerProps) {
           {/* Hex input */}
           <div className="flex items-center gap-2">
             <div
-              className="w-6 h-6 rounded-md shrink-0 border border-[#E8E2D9]"
+              className="w-6 h-6 rounded-md shrink-0 border border-[var(--color-border)]"
               style={{ backgroundColor: value }}
             />
             <input
@@ -261,7 +260,7 @@ export function ColorPicker({ value, onChange, label }: ColorPickerProps) {
                   setHue(h); setSat(s); setVal(v)
                 }
               }}
-              className="flex-1 text-xs font-mono border border-[#E8E2D9] rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#7C9E8A] bg-[#FEFCF8] text-[#2C2825]"
+              className="flex-1 text-xs font-mono border border-[var(--color-border)] rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)] bg-[var(--color-paper)] text-[var(--color-text-primary)]"
               placeholder="#2C2825"
               maxLength={7}
               spellCheck={false}

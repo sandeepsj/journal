@@ -41,7 +41,7 @@ export function Avatar({ src, name, size = 'md' }: AvatarProps) {
 
   return (
     <div
-      className={`rounded-full bg-[#EAF1EC] text-[#7C9E8A] font-medium flex items-center justify-center select-none ${text}`}
+      className={`rounded-full bg-[var(--color-accent-light)] text-[var(--color-accent)] font-medium flex items-center justify-center select-none ${text}`}
       style={{ width: px, height: px }}
       aria-label={name}
       role="img"

@@ -41,6 +41,46 @@
   --glass-border:   rgba(232,226,217,0.60);
   --glass-blur:     blur(12px);
   --glass-blur-sm:  blur(8px);
+
+  /* Paper tokens */
+  --color-paper:        #FEFCF8;
+  --color-paper-line:   #EAE4DC;
+  --color-paper-margin: #F5C4C4;
+  --color-dot-pattern:  #D4CEC8;
+}
+
+/* ── Dark theme overrides ───────────────────────────────────────── */
+html.dark {
+  --color-bg:             #1C1917;
+  --color-surface:        #252220;
+  --color-surface-muted:  #2E2A27;
+  --color-border:         #3D3733;
+  --color-text-primary:   #F0EBE6;
+  --color-text-secondary: #BDB5AF;
+  --color-text-muted:     #7A7068;
+  --color-accent:         #8FB5A0;
+  --color-accent-light:   #1E3328;
+  --color-error:          #E8907E;
+  --color-success:        #7FB88A;
+
+  /* Paper tokens */
+  --color-paper:        #201D1B;
+  --color-paper-line:   #2E2A27;
+  --color-paper-margin: #5C3030;
+  --color-dot-pattern:  #272320;
+
+  /* Shadows (deeper on dark) */
+  --shadow-xs:     0 1px 2px rgba(0,0,0,0.18);
+  --shadow-sm:     0 2px 8px rgba(0,0,0,0.22), 0 1px 2px rgba(0,0,0,0.14);
+  --shadow-md:     0 4px 16px rgba(0,0,0,0.28), 0 2px 4px rgba(0,0,0,0.16);
+  --shadow-lg:     0 8px 32px rgba(0,0,0,0.34), 0 4px 8px rgba(0,0,0,0.18);
+  --shadow-xl:     0 16px 48px rgba(0,0,0,0.40), 0 6px 12px rgba(0,0,0,0.20);
+  --shadow-accent: 0 4px 20px rgba(143,181,160,0.20);
+
+  /* Glass */
+  --glass-bg:       rgba(37,34,32,0.82);
+  --glass-bg-warm:  rgba(30,27,25,0.88);
+  --glass-border:   rgba(61,55,51,0.60);
 }
 
 /* ── Theme mapping ─────────────────────────────────────────────── */
@@ -49,6 +89,12 @@
   --font-serif: var(--font-serif);
   --color-background: var(--color-bg);
   --color-foreground: var(--color-text-primary);
+  --color-surface: var(--color-surface);
+  --color-border: var(--color-border);
+  --color-accent: var(--color-accent);
+  --color-muted: var(--color-text-muted);
+  --color-error: var(--color-error);
+  --color-success: var(--color-success);
 }
 
 /* ── Base ──────────────────────────────────────────────────────── */
@@ -59,7 +105,7 @@ html {
 body {
   background-color: var(--color-bg);
   /* Subtle warm dot pattern — like journal paper */
-  background-image: radial-gradient(circle, #D4CEC8 1px, transparent 1px);
+  background-image: radial-gradient(circle, var(--color-dot-pattern) 1px, transparent 1px);
   background-size: 24px 24px;
   color: var(--color-text-primary);
   font-family: var(--font-sans);
@@ -188,19 +234,18 @@ body {
 /* ── Ruled paper ───────────────────────────────────────────────── */
 /* Line height must match --rule-h exactly for text to sit on lines */
 :root {
-  --rule-h: 2.75rem;       /* height of one ruled line */
-  --rule-color: #EAE4DC;   /* subtle warm line color   */
-  --rule-margin: 4rem;     /* left red-margin position */
+  --rule-h: 2.75rem;   /* height of one ruled line */
+  --rule-margin: 4rem; /* left red-margin position */
 }
 
 .ruled-paper {
-  background-color: #FEFCF8;
+  background-color: var(--color-paper);
   /* Only the red margin line — horizontal rules live on the writing area */
   background-image:
     linear-gradient(90deg,
       transparent calc(var(--rule-margin) - 1px),
-      #F5C4C4 calc(var(--rule-margin) - 1px),
-      #F5C4C4 var(--rule-margin),
+      var(--color-paper-margin) calc(var(--rule-margin) - 1px),
+      var(--color-paper-margin) var(--rule-margin),
       transparent var(--rule-margin)
     );
   background-size: 100% 100%;
@@ -210,7 +255,7 @@ body {
 /* Applied to the writing area div so lines start at y=0 of the text area */
 .ruled-lines {
   background-image:
-    linear-gradient(transparent calc(var(--rule-h) - 1px), var(--rule-color) calc(var(--rule-h) - 1px));
+    linear-gradient(transparent calc(var(--rule-h) - 1px), var(--color-paper-line) calc(var(--rule-h) - 1px));
   background-size: 100% var(--rule-h);
   background-position: 0 0;
 }

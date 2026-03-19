@@ -52,7 +52,7 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
     >
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-[#2C2825]/30 backdrop-blur-sm animate-fade-in"
+        className="absolute inset-0 bg-black/30 dark:bg-black/50 backdrop-blur-sm animate-fade-in"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -61,17 +61,17 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
       <div
         ref={dialogRef}
         tabIndex={-1}
-        className={`relative bg-white/90 backdrop-blur-md border border-[#E8E2D9] rounded-2xl shadow-[var(--shadow-xl)] w-full ${sizeMap[size]} animate-scale-in focus:outline-none`}
+        className={`relative bg-[var(--color-surface)]/90 backdrop-blur-md border border-[var(--color-border)] rounded-2xl shadow-[var(--shadow-xl)] w-full ${sizeMap[size]} animate-scale-in focus:outline-none`}
       >
         {title && (
-          <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-[#E8E2D9]">
-            <h2 id="modal-title" className="font-serif text-lg text-[#2C2825]">
+          <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-[var(--color-border)]">
+            <h2 id="modal-title" className="font-serif text-lg text-[var(--color-text-primary)]">
               {title}
             </h2>
             <button
               onClick={onClose}
               aria-label="Close"
-              className="text-[#B5A99F] hover:text-[#2C2825] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C9E8A] rounded-md"
+              className="text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] rounded-md"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M18 6 6 18M6 6l12 12" />

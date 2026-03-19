@@ -5,7 +5,7 @@ export default function DashboardLoading() {
   return (
     <div className="min-h-screen" aria-busy="true" aria-label="Loading dashboard">
       {/* Skeleton navbar */}
-      <div className="border-b border-[#E8E2D9] h-14 px-4 flex items-center justify-between max-w-4xl mx-auto">
+      <div className="border-b border-[var(--color-border)] h-14 px-4 flex items-center justify-between max-w-4xl mx-auto">
         <Skeleton className="h-5 w-12" />
         <Skeleton className="h-7 w-7" rounded="full" />
       </div>

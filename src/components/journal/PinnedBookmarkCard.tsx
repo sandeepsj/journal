@@ -42,7 +42,7 @@ export function PinnedBookmarkCard({
 }: PinnedBookmarkCardProps) {
   return (
     <article
-      className={`w-[200px] h-[120px] flex-shrink-0 bg-white border border-[#E8E2D9] rounded-xl p-3 shadow-[var(--shadow-xs)] hover:-translate-y-1 hover:shadow-[var(--shadow-md)] hover:border-[#B5A99F] transition-[transform,box-shadow,border-color] duration-200 cursor-pointer flex flex-col ${className}`}
+      className={`w-[200px] h-[120px] flex-shrink-0 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-3 shadow-[var(--shadow-xs)] hover:-translate-y-1 hover:shadow-[var(--shadow-md)] hover:border-[var(--color-text-muted)] transition-[transform,box-shadow,border-color] duration-200 cursor-pointer flex flex-col ${className}`}
       onClick={onClick}
       role="button"
       tabIndex={0}
@@ -65,14 +65,14 @@ export function PinnedBookmarkCard({
           }}
           aria-label="Unpin entry"
           title="Unpin"
-          className="text-[#7C9E8A] hover:text-[#B5A99F] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#7C9E8A] rounded p-0.5"
+          className="text-[var(--color-accent)] hover:text-[var(--color-text-muted)] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--color-accent)] rounded p-0.5"
         >
           <PinFilledIcon />
         </button>
       </div>
 
       {/* Title */}
-      <p className="font-serif text-sm text-[#2C2825] line-clamp-2 leading-snug flex-1 mb-1.5">
+      <p className="font-serif text-sm text-[var(--color-text-primary)] line-clamp-2 leading-snug flex-1 mb-1.5">
         {title}
       </p>
 

@@ -38,7 +38,7 @@ function renderMarkdown(text: string) {
     if (match.index > last) parts.push(text.slice(last, match.index))
     const m = match[0]
     if (m.startsWith('**')) {
-      parts.push(<strong key={key++} className="font-semibold text-[#2C2825]">{m.slice(2, -2)}</strong>)
+      parts.push(<strong key={key++} className="font-semibold text-[var(--color-text-primary)]">{m.slice(2, -2)}</strong>)
     } else {
       parts.push(<em key={key++}>{m.slice(1, -1)}</em>)
     }
@@ -165,19 +165,19 @@ export function RecallChatPanel({ sessionId, initialMessages, onSessionCreated, 
   }
 
   return (
-    <div className="flex flex-col h-full bg-[#FAF9F7] relative">
+    <div className="flex flex-col h-full bg-[var(--color-surface-muted)] relative">
       {/* Header */}
-      <header className="flex-shrink-0 flex items-center h-14 px-4 border-b border-[#E8E2D9] bg-white sticky top-0 z-10 gap-3">
+      <header className="flex-shrink-0 flex items-center h-14 px-4 border-b border-[var(--color-border)] bg-[var(--color-surface)] sticky top-0 z-10 gap-3">
         <button
           onClick={onOpenSidebar}
-          className="md:hidden p-1.5 text-[#847B73] hover:text-[#2C2825] rounded-md hover:bg-[#F2EEE8] transition-colors"
+          className="md:hidden p-1.5 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] rounded-md hover:bg-[var(--color-surface-muted)] transition-colors"
           aria-label="Open sidebar"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M3 12h18M3 6h18M3 18h18" />
           </svg>
         </button>
-        <span className="font-serif text-lg text-[#2C2825] truncate flex-1">
+        <span className="font-serif text-lg text-[var(--color-text-primary)] truncate flex-1">
           {sessionId ? 'Conversation' : 'Ask your journal'}
         </span>
       </header>
@@ -186,14 +186,14 @@ export function RecallChatPanel({ sessionId, initialMessages, onSessionCreated, 
       <div className="flex-1 overflow-y-auto w-full">
         {messages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center p-6 text-center animate-fade-in">
-            <div className="w-16 h-16 bg-[#EAF1EC] rounded-full flex items-center justify-center mb-6">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#7C9E8A" strokeWidth="2">
+            <div className="w-16 h-16 bg-[var(--color-accent-light)] rounded-full flex items-center justify-center mb-6">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" strokeWidth="2">
                 <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z" />
                 <path d="M12 8v4l3 3" />
               </svg>
             </div>
-            <h2 className="font-serif text-3xl text-[#2C2825] mb-3">Ask your journal anything</h2>
-            <p className="text-[#847B73] max-w-sm leading-relaxed">
+            <h2 className="font-serif text-3xl text-[var(--color-text-primary)] mb-3">Ask your journal anything</h2>
+            <p className="text-[var(--color-text-secondary)] max-w-sm leading-relaxed">
               I can help you recall patterns, insights, and memories from your entries.
             </p>
             <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-md text-left">
@@ -209,7 +209,7 @@ export function RecallChatPanel({ sessionId, initialMessages, onSessionCreated, 
                     setQuery(suggestion)
                     textareaRef.current?.focus()
                   }}
-                  className="text-sm text-[#8B7D72] bg-white border border-[#E8E2D9] rounded-xl px-4 py-3 hover:border-[#7C9E8A] hover:text-[#2C2825] transition-colors text-left"
+                  className="text-sm text-[var(--color-text-secondary)] bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-4 py-3 hover:border-[var(--color-accent)] hover:text-[var(--color-text-primary)] transition-colors text-left"
                 >
                   {suggestion}
                 </button>
@@ -221,24 +221,24 @@ export function RecallChatPanel({ sessionId, initialMessages, onSessionCreated, 
             {messages.map((msg, idx) => (
               <div key={idx} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 {msg.role === 'assistant' && (
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#EAF1EC] flex items-center justify-center mt-1">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7C9E8A" strokeWidth="2">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[var(--color-accent-light)] flex items-center justify-center mt-1">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" strokeWidth="2">
                       <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z" />
                       <path d="M12 8v4l3 3" />
                     </svg>
                   </div>
                 )}
 
-                <div className={`max-w-[85%] ${msg.role === 'user' ? 'rounded-2xl rounded-tr-sm px-4 py-3 bg-[#7C9E8A] text-white text-base leading-relaxed' : 'text-[#2C2825] leading-relaxed'}`}>
+                <div className={`max-w-[85%] ${msg.role === 'user' ? 'rounded-2xl rounded-tr-sm px-4 py-3 bg-[var(--color-accent)] text-white text-base leading-relaxed' : 'text-[var(--color-text-primary)] leading-relaxed'}`}>
                   {msg.role === 'user' ? (
                     <p className="whitespace-pre-wrap">{msg.content}</p>
                   ) : (
                     <div>
                       {msg.content ? (
-                        <p className="font-serif text-base whitespace-pre-wrap text-[#2C2825]">
+                        <p className="font-serif text-base whitespace-pre-wrap text-[var(--color-text-primary)]">
                           {renderMarkdown(msg.content)}
                           {isStreaming && idx === messages.length - 1 && (
-                            <span className="inline-block w-0.5 h-4 bg-[#7C9E8A] animate-cursor-blink ml-1 align-middle" />
+                            <span className="inline-block w-0.5 h-4 bg-[var(--color-accent)] animate-cursor-blink ml-1 align-middle" />
                           )}
                         </p>
                       ) : (
@@ -248,8 +248,8 @@ export function RecallChatPanel({ sessionId, initialMessages, onSessionCreated, 
                       )}
 
                       {msg.citations && msg.citations.length > 0 && (
-                        <div className="mt-5 border-t border-[#E8E2D9] pt-4">
-                          <p className="text-xs font-medium text-[#B5A99F] uppercase tracking-wide mb-3">
+                        <div className="mt-5 border-t border-[var(--color-border)] pt-4">
+                          <p className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wide mb-3">
                             From your journal
                           </p>
                           <div className="space-y-2">
@@ -272,7 +272,7 @@ export function RecallChatPanel({ sessionId, initialMessages, onSessionCreated, 
             ))}
 
             {error && (
-              <div className="bg-[#FAF5F4] text-[#C4614E] px-4 py-3 rounded-xl text-sm text-center max-w-sm mx-auto border border-[#F5C4C4]">
+              <div className="bg-[var(--color-error)]/10 text-[var(--color-error)] px-4 py-3 rounded-xl text-sm text-center max-w-sm mx-auto border border-[var(--color-error)]/20">
                 {error}
               </div>
             )}
@@ -283,10 +283,10 @@ export function RecallChatPanel({ sessionId, initialMessages, onSessionCreated, 
       </div>
 
       {/* Input bar */}
-      <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-[#FAF9F7] via-[#FAF9F7]/95 to-transparent pt-8 pb-5 px-4">
+      <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-[var(--color-surface-muted)] via-[var(--color-surface-muted)]/95 to-transparent pt-8 pb-5 px-4">
         <form
           onSubmit={handleSubmit}
-          className="max-w-3xl mx-auto bg-white border border-[#E8E2D9] rounded-2xl shadow-sm flex items-end gap-2 px-4 py-3 focus-within:border-[#7C9E8A] focus-within:ring-2 focus-within:ring-[#7C9E8A]/20 transition-all"
+          className="max-w-3xl mx-auto bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-sm flex items-end gap-2 px-4 py-3 focus-within:border-[var(--color-accent)] focus-within:ring-2 focus-within:ring-[var(--color-accent)]/20 transition-all"
         >
           <textarea
             ref={textareaRef}
@@ -299,7 +299,7 @@ export function RecallChatPanel({ sessionId, initialMessages, onSessionCreated, 
               }
             }}
             placeholder="Ask your journal anything… (Enter to send)"
-            className="flex-1 bg-transparent border-none outline-none ring-0 focus:outline-none focus:ring-0 resize-none text-base text-[#2C2825] placeholder:text-[#B5A99F] py-0.5"
+            className="flex-1 bg-transparent border-none outline-none ring-0 focus:outline-none focus:ring-0 resize-none text-base text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] py-0.5"
             rows={1}
             style={{ maxHeight: '8rem' }}
             disabled={isStreaming}
@@ -307,7 +307,7 @@ export function RecallChatPanel({ sessionId, initialMessages, onSessionCreated, 
           <button
             type="submit"
             disabled={!query.trim() || isStreaming}
-            className="flex-shrink-0 w-9 h-9 rounded-full bg-[#7C9E8A] text-white flex items-center justify-center hover:bg-[#6A9B77] disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+            className="flex-shrink-0 w-9 h-9 rounded-full bg-[var(--color-accent)] text-white flex items-center justify-center hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
             aria-label="Send"
           >
             {isStreaming ? (
@@ -319,7 +319,7 @@ export function RecallChatPanel({ sessionId, initialMessages, onSessionCreated, 
             )}
           </button>
         </form>
-        <p className="text-center mt-2 text-[11px] text-[#B5A99F]">
+        <p className="text-center mt-2 text-[11px] text-[var(--color-text-muted)]">
           Answers are based on your journal entries only
         </p>
       </div>

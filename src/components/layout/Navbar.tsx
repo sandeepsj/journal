@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useState, useRef, useEffect } from 'react'
 import { Avatar } from '@/components/ui/Avatar'
 import { Button } from '@/components/ui/Button'
+import { ThemeToggle } from './ThemeToggle'
 
 export interface NavbarProps {
   userName: string
@@ -37,53 +38,57 @@ export function Navbar({ userName, userEmail, userImage, onSignOut }: NavbarProp
   }, [])
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[#E8E2D9]/60 bg-[#FAF8F5]/80 backdrop-blur-md shadow-[var(--shadow-xs)]">
+    <header className="sticky top-0 z-40 border-b border-[var(--color-border)]/60 bg-[var(--color-bg)]/80 backdrop-blur-md shadow-[var(--shadow-xs)]">
       <div className="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
         <Link
           href="/"
-          className="font-serif text-2xl text-[#2C2825] hover:text-[#7C9E8A] transition-colors duration-150"
+          className="font-serif text-2xl text-[var(--color-text-primary)] hover:text-[var(--color-accent)] transition-colors duration-150"
         >
           Muse
         </Link>
 
-        <div className="relative" ref={menuRef}>
-          <button
-            onClick={() => setMenuOpen((v) => !v)}
-            aria-label="User menu"
-            aria-expanded={menuOpen}
-            aria-haspopup="menu"
-            className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C9E8A] focus-visible:ring-offset-2"
-          >
-            <Avatar src={userImage} name={userName} size="sm" />
-          </button>
+        <div className="flex items-center gap-1">
+          <ThemeToggle />
 
-          {menuOpen && (
-            <div
-              role="menu"
-              className="absolute right-0 mt-2 w-52 bg-white/90 backdrop-blur-sm border border-[#E8E2D9] rounded-xl shadow-[var(--shadow-lg)] p-1 animate-fade-in"
+          <div className="relative" ref={menuRef}>
+            <button
+              onClick={() => setMenuOpen((v) => !v)}
+              aria-label="User menu"
+              aria-expanded={menuOpen}
+              aria-haspopup="menu"
+              className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
             >
-              <div className="px-3 py-2 border-b border-[#E8E2D9] mb-1">
-                <p className="text-base font-medium text-[#2C2825] truncate">{userName}</p>
-                {userEmail && (
-                  <p className="text-sm text-[#B5A99F] truncate">{userEmail}</p>
-                )}
-              </div>
+              <Avatar src={userImage} name={userName} size="sm" />
+            </button>
 
-              <Button
-                variant="ghost"
-                size="sm"
-                fullWidth
-                onClick={() => {
-                  setMenuOpen(false)
-                  onSignOut()
-                }}
-                role="menuitem"
-                className="justify-start text-[#8B7D72] hover:text-[#C4614E]"
+            {menuOpen && (
+              <div
+                role="menu"
+                className="absolute right-0 mt-2 w-52 bg-[var(--color-surface)]/90 backdrop-blur-sm border border-[var(--color-border)] rounded-xl shadow-[var(--shadow-lg)] p-1 animate-fade-in"
               >
-                Sign out
-              </Button>
-            </div>
-          )}
+                <div className="px-3 py-2 border-b border-[var(--color-border)] mb-1">
+                  <p className="text-base font-medium text-[var(--color-text-primary)] truncate">{userName}</p>
+                  {userEmail && (
+                    <p className="text-sm text-[var(--color-text-muted)] truncate">{userEmail}</p>
+                  )}
+                </div>
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  fullWidth
+                  onClick={() => {
+                    setMenuOpen(false)
+                    onSignOut()
+                  }}
+                  role="menuitem"
+                  className="justify-start text-[var(--color-text-secondary)] hover:text-[var(--color-error)]"
+                >
+                  Sign out
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </header>

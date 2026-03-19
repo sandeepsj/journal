@@ -6,9 +6,9 @@ export interface AutoSaveStatusProps {
 
 const config: Record<SaveStatus, { label: string; color: string }> = {
   idle:   { label: '',        color: 'text-transparent' },
-  saving: { label: 'Saving…', color: 'text-[#B5A99F]' },
-  saved:  { label: 'Saved',   color: 'text-[#6A9B77]' },
-  error:  { label: 'Failed to save', color: 'text-[#C4614E]' },
+  saving: { label: 'Saving…', color: 'text-[var(--color-text-muted)]' },
+  saved:  { label: 'Saved',   color: 'text-[var(--color-success)]' },
+  error:  { label: 'Failed to save', color: 'text-[var(--color-error)]' },
 }
 
 export function AutoSaveStatus({ status }: AutoSaveStatusProps) {

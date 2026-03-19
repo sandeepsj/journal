@@ -61,20 +61,20 @@ export function DrawingToolbar({
 
   return (
     <div
-      className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#E8E2D9] bg-[#FEFCF8]/90 backdrop-blur-sm shadow-[var(--shadow-xs)]"
+      className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--color-border)] bg-[var(--color-paper)]/90 backdrop-blur-sm shadow-[var(--shadow-xs)]"
       role="toolbar"
       aria-label="Editor tools"
     >
       {/* Write / Draw toggle */}
-      <div className="flex items-center gap-0.5 rounded-full bg-[#F2EEE8] p-0.5">
+      <div className="flex items-center gap-0.5 rounded-full bg-[var(--color-surface-muted)] p-0.5">
         <button
           onClick={() => onModeChange('write')}
           title="Write mode"
           aria-pressed={mode === 'write'}
           className={`flex items-center justify-center w-7 h-7 rounded-full transition-colors duration-150 ${
             mode === 'write'
-              ? 'bg-white shadow-[var(--shadow-xs)] text-[#7C9E8A]'
-              : 'text-[#8B7D72] hover:text-[#2C2825]'
+              ? 'bg-[var(--color-surface)] shadow-[var(--shadow-xs)] text-[var(--color-accent)]'
+              : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
           }`}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -87,8 +87,8 @@ export function DrawingToolbar({
           aria-pressed={mode === 'draw'}
           className={`flex items-center justify-center w-7 h-7 rounded-full transition-colors duration-150 ${
             mode === 'draw'
-              ? 'bg-white shadow-[var(--shadow-xs)] text-[#7C9E8A]'
-              : 'text-[#8B7D72] hover:text-[#2C2825]'
+              ? 'bg-[var(--color-surface)] shadow-[var(--shadow-xs)] text-[var(--color-accent)]'
+              : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
           }`}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -98,7 +98,7 @@ export function DrawingToolbar({
         </button>
       </div>
 
-      <div className="w-px h-5 bg-[#E8E2D9]" aria-hidden />
+      <div className="w-px h-5 bg-[var(--color-border)]" aria-hidden />
 
       {/* Write mode — text color */}
       {mode === 'write' && (
@@ -110,7 +110,7 @@ export function DrawingToolbar({
         onClick={onUndo}
         disabled={!canUndo}
         title="Undo (⌘Z)"
-        className="flex items-center justify-center w-7 h-7 rounded-full transition-colors duration-150 disabled:opacity-30 disabled:cursor-not-allowed text-[#8B7D72] hover:text-[#2C2825] hover:bg-[#F2EEE8] disabled:hover:bg-transparent disabled:hover:text-[#8B7D72]"
+        className="flex items-center justify-center w-7 h-7 rounded-full transition-colors duration-150 disabled:opacity-30 disabled:cursor-not-allowed text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-muted)] disabled:hover:bg-transparent disabled:hover:text-[var(--color-text-secondary)]"
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M3 7v6h6" /><path d="M3 13A9 9 0 1 0 5.7 5.7L3 7" />
@@ -122,7 +122,7 @@ export function DrawingToolbar({
         onClick={onRedo}
         disabled={!canRedo}
         title="Redo (⌘⇧Z)"
-        className="flex items-center justify-center w-7 h-7 rounded-full transition-colors duration-150 disabled:opacity-30 disabled:cursor-not-allowed text-[#8B7D72] hover:text-[#2C2825] hover:bg-[#F2EEE8] disabled:hover:bg-transparent disabled:hover:text-[#8B7D72]"
+        className="flex items-center justify-center w-7 h-7 rounded-full transition-colors duration-150 disabled:opacity-30 disabled:cursor-not-allowed text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-muted)] disabled:hover:bg-transparent disabled:hover:text-[var(--color-text-secondary)]"
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M21 7v6h-6" /><path d="M21 13A9 9 0 1 1 18.3 5.7L21 7" />
@@ -132,14 +132,14 @@ export function DrawingToolbar({
       {/* Draw mode controls */}
       {mode === 'draw' && (
         <>
-          <div className="w-px h-5 bg-[#E8E2D9]" aria-hidden />
+          <div className="w-px h-5 bg-[var(--color-border)]" aria-hidden />
 
           {/* Brush / eraser color + size */}
           {!erasing ? (
             <>
               <ColorPicker value={brushColor} onChange={onBrushColorChange} label="Ink" />
 
-              <div className="w-px h-5 bg-[#E8E2D9]" aria-hidden />
+              <div className="w-px h-5 bg-[var(--color-border)]" aria-hidden />
 
               {/* Brush size */}
               <div className="flex items-center gap-1" role="group" aria-label="Brush size">
@@ -150,7 +150,7 @@ export function DrawingToolbar({
                     title={s.label}
                     aria-pressed={brushSize === s.value}
                     className={`flex items-center justify-center w-6 h-6 rounded-full transition-colors duration-150 ${
-                      brushSize === s.value ? 'bg-[#EAF1EC]' : 'hover:bg-[#F2EEE8]'
+                      brushSize === s.value ? 'bg-[var(--color-accent-light)]' : 'hover:bg-[var(--color-surface-muted)]'
                     }`}
                   >
                     <span
@@ -164,7 +164,7 @@ export function DrawingToolbar({
           ) : (
             /* Eraser size */
             <div className="flex items-center gap-1" role="group" aria-label="Eraser size">
-              <span className="text-[10px] text-[#8B7D72] font-medium uppercase tracking-wide mr-0.5">
+              <span className="text-[10px] text-[var(--color-text-secondary)] font-medium uppercase tracking-wide mr-0.5">
                 Size
               </span>
               {ERASER_SIZES.map((s) => (
@@ -174,11 +174,11 @@ export function DrawingToolbar({
                   title={s.label}
                   aria-pressed={eraserSize === s.value}
                   className={`flex items-center justify-center w-6 h-6 rounded-full transition-colors duration-150 ${
-                    eraserSize === s.value ? 'bg-[#EAF1EC]' : 'hover:bg-[#F2EEE8]'
+                    eraserSize === s.value ? 'bg-[var(--color-accent-light)]' : 'hover:bg-[var(--color-surface-muted)]'
                   }`}
                 >
                   <span
-                    className="rounded-full bg-[#D4CEC8]"
+                    className="rounded-full bg-[var(--color-border)]"
                     style={{ width: s.dotSize, height: s.dotSize }}
                   />
                 </button>
@@ -186,7 +186,7 @@ export function DrawingToolbar({
             </div>
           )}
 
-          <div className="w-px h-5 bg-[#E8E2D9]" aria-hidden />
+          <div className="w-px h-5 bg-[var(--color-border)]" aria-hidden />
 
           {/* Eraser toggle */}
           <button
@@ -195,8 +195,8 @@ export function DrawingToolbar({
             aria-pressed={erasing}
             className={`flex items-center justify-center w-7 h-7 rounded-full transition-colors duration-150 ${
               erasing
-                ? 'bg-[#EAF1EC] text-[#7C9E8A]'
-                : 'text-[#8B7D72] hover:text-[#2C2825] hover:bg-[#F2EEE8]'
+                ? 'bg-[var(--color-accent-light)] text-[var(--color-accent)]'
+                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-muted)]'
             }`}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -210,7 +210,7 @@ export function DrawingToolbar({
           <button
             onClick={handleClear}
             title="Clear drawing"
-            className="flex items-center justify-center w-7 h-7 rounded-full text-[#C4614E] hover:bg-[#FDF0EE] transition-colors duration-150"
+            className="flex items-center justify-center w-7 h-7 rounded-full text-[var(--color-error)] hover:bg-[var(--color-error)]/10 transition-colors duration-150"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />

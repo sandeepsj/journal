@@ -49,8 +49,8 @@ export function DashboardView({ userName }: DashboardViewProps) {
     <div className="max-w-5xl mx-auto px-6 py-8 pb-28 space-y-8 animate-page-enter relative">
       {/* Greeting */}
       <div>
-        <h1 className="font-serif text-4xl text-[#2C2825] animate-slide-up stagger-1">{greeting}</h1>
-        <p className="text-base text-[#B5A99F] mt-1">
+        <h1 className="font-serif text-4xl text-[var(--color-text-primary)] animate-slide-up stagger-1">{greeting}</h1>
+        <p className="text-base text-[var(--color-text-muted)] mt-1">
           {new Date().toLocaleDateString('en-US', {
             weekday: 'long',
             month: 'long',
@@ -62,19 +62,19 @@ export function DashboardView({ userName }: DashboardViewProps) {
       {/* Ask your journal card */}
       <button
         onClick={() => router.push('/recall')}
-        className="w-full text-left bg-gradient-to-r from-[#EAF1EC] to-white border border-[#E8E2D9] rounded-2xl px-5 py-4 flex items-center gap-4 hover:from-[#7C9E8A]/10 hover:to-[#EAF1EC] hover:border-[#7C9E8A] shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-accent)] transition-all duration-200 group"
+        className="w-full text-left bg-gradient-to-r from-[var(--color-accent-light)] to-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl px-5 py-4 flex items-center gap-4 hover:border-[var(--color-accent)] shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-accent)] transition-all duration-200 group"
       >
-        <div className="w-10 h-10 rounded-full bg-[#EAF1EC] flex items-center justify-center flex-shrink-0 group-hover:bg-[#7C9E8A] group-hover:shadow-[var(--shadow-accent)] transition-all duration-200">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[#7C9E8A] group-hover:text-white transition-colors duration-150">
+        <div className="w-10 h-10 rounded-full bg-[var(--color-accent-light)] flex items-center justify-center flex-shrink-0 group-hover:bg-[var(--color-accent)] group-hover:shadow-[var(--shadow-accent)] transition-all duration-200">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[var(--color-accent)] group-hover:text-white transition-colors duration-150">
             <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z" />
             <path d="M12 8v4l3 3" />
           </svg>
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-base font-medium text-[#2C2825]">Ask your journal</p>
-          <p className="text-sm text-[#B5A99F] truncate">What have I been grateful for lately?</p>
+          <p className="text-base font-medium text-[var(--color-text-primary)]">Ask your journal</p>
+          <p className="text-sm text-[var(--color-text-muted)] truncate">What have I been grateful for lately?</p>
         </div>
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[#D4CEC8] group-hover:text-[#7C9E8A] transition-colors duration-150 flex-shrink-0">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[var(--color-border)] group-hover:text-[var(--color-accent)] transition-colors duration-150 flex-shrink-0">
           <path d="m9 18 6-6-6-6" />
         </svg>
       </button>
@@ -98,7 +98,7 @@ export function DashboardView({ userName }: DashboardViewProps) {
       {/* Entry list header */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-medium text-[#8B7D72] uppercase tracking-wide">
+          <h2 className="text-base font-medium text-[var(--color-text-secondary)] uppercase tracking-wide">
             Your entries
           </h2>
         </div>
@@ -120,7 +120,7 @@ export function DashboardView({ userName }: DashboardViewProps) {
 
       {error && (
         <div className="text-center py-12">
-          <p className="text-base text-[#C4614E] mb-3">{error}</p>
+          <p className="text-base text-[var(--color-error)] mb-3">{error}</p>
           <Button variant="ghost" size="sm" onClick={() => window.location.reload()}>
             Try again
           </Button>
@@ -180,7 +180,7 @@ export function DashboardView({ userName }: DashboardViewProps) {
 
       {/* Delete confirmation modal */}
       <Modal isOpen={!!deleteId} onClose={() => setDeleteId(null)} title="Delete entry" size="sm">
-        <p className="text-base text-[#8B7D72] mb-6">
+        <p className="text-base text-[var(--color-text-secondary)] mb-6">
           This entry will be permanently deleted. This cannot be undone.
         </p>
         <div className="flex gap-2 justify-end">
@@ -193,7 +193,7 @@ export function DashboardView({ userName }: DashboardViewProps) {
       <button
         onClick={() => router.push('/journal/new')}
         aria-label="New journal entry"
-        className="fixed bottom-8 right-8 md:bottom-12 md:right-12 xl:right-16 w-14 h-14 rounded-full bg-[#7C9E8A] text-white shadow-[var(--shadow-lg)] hover:bg-[#6A9B77] hover:shadow-[var(--shadow-accent)] hover:scale-110 active:scale-95 transition-all duration-150 flex items-center justify-center z-30"
+        className="fixed bottom-8 right-8 md:bottom-12 md:right-12 xl:right-16 w-14 h-14 rounded-full bg-[var(--color-accent)] text-white shadow-[var(--shadow-lg)] hover:opacity-90 hover:shadow-[var(--shadow-accent)] hover:scale-110 active:scale-95 transition-all duration-150 flex items-center justify-center z-30"
       >
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <path d="M12 5v14M5 12h14" />

@@ -14,11 +14,11 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
-    'bg-[#7C9E8A] text-white hover:bg-[#6a8f7a] border border-transparent shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-accent)] active:translate-y-px active:shadow-none',
+    'bg-[var(--color-accent)] text-white hover:opacity-90 border border-transparent shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-accent)] active:translate-y-px active:shadow-none',
   ghost:
-    'bg-transparent text-[#2C2825] hover:bg-[#F2EEE8] border border-[#E8E2D9]',
+    'bg-transparent text-[var(--color-text-primary)] hover:bg-[var(--color-surface-muted)] border border-[var(--color-border)]',
   danger:
-    'bg-transparent text-[#C4614E] hover:bg-[#fff0ed] border border-[#C4614E]',
+    'bg-transparent text-[var(--color-error)] hover:bg-[var(--color-error)]/10 border border-[var(--color-error)]',
 }
 
 const sizeClasses: Record<ButtonSize, string> = {
@@ -43,7 +43,7 @@ export function Button({
     <button
       disabled={isDisabled}
       className={[
-        'inline-flex items-center justify-center font-medium transition-[colors,box-shadow,transform] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C9E8A] focus-visible:ring-offset-2',
+        'inline-flex items-center justify-center font-medium transition-[colors,box-shadow,transform] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2',
         variantClasses[variant],
         sizeClasses[size],
         fullWidth ? 'w-full' : '',

@@ -29,7 +29,7 @@ export function Textarea({
   return (
     <div className="flex flex-col gap-1.5">
       {label && (
-        <label htmlFor={id} className="text-sm font-medium text-[#2C2825]">
+        <label htmlFor={id} className="text-sm font-medium text-[var(--color-text-primary)]">
           {label}
         </label>
       )}
@@ -40,12 +40,12 @@ export function Textarea({
         rows={rows}
         maxLength={maxLength}
         className={[
-          'w-full px-3 py-2 text-sm rounded-lg border bg-white/70 text-[#2C2825] placeholder:text-[#B5A99F] resize-y transition-[colors,box-shadow] duration-150',
-          'hover:bg-white hover:shadow-[var(--shadow-xs)]',
-          'focus:outline-none focus:ring-2 focus:ring-[#7C9E8A]/40 focus:shadow-[0_0_0_4px_rgba(124,158,138,0.08)] focus:ring-offset-0',
+          'w-full px-3 py-2 text-sm rounded-lg border bg-[var(--color-surface)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] resize-y transition-[colors,box-shadow] duration-150',
+          'hover:shadow-[var(--shadow-xs)]',
+          'focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:ring-offset-0',
           error
-            ? 'border-[#C4614E] focus:ring-[#C4614E]/40'
-            : 'border-[#E8E2D9] hover:border-[#B5A99F]',
+            ? 'border-[var(--color-error)] focus:ring-[var(--color-error)]/40'
+            : 'border-[var(--color-border)] hover:border-[var(--color-text-muted)]',
           className,
         ]
           .filter(Boolean)
@@ -57,18 +57,18 @@ export function Textarea({
       <div className="flex justify-between items-start">
         <div>
           {error && (
-            <p id={`${id}-error`} role="alert" className="text-xs text-[#C4614E]">
+            <p id={`${id}-error`} role="alert" className="text-xs text-[var(--color-error)]">
               {error}
             </p>
           )}
           {!error && hint && (
-            <p id={`${id}-hint`} className="text-xs text-[#B5A99F]">
+            <p id={`${id}-hint`} className="text-xs text-[var(--color-text-muted)]">
               {hint}
             </p>
           )}
         </div>
         {showCount && maxLength !== undefined && (
-          <p className={`text-xs tabular-nums ${atLimit ? 'text-[#C4614E]' : 'text-[#B5A99F]'}`}>
+          <p className={`text-xs tabular-nums ${atLimit ? 'text-[var(--color-error)]' : 'text-[var(--color-text-muted)]'}`}>
             {value.length}/{maxLength}
           </p>
         )}

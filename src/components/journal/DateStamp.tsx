@@ -37,7 +37,7 @@ export function DateStamp({ date, format = 'short' }: DateStampProps) {
   const iso = d.toISOString()
 
   return (
-    <time dateTime={iso} className="text-xs text-[#B5A99F] tabular-nums">
+    <time dateTime={iso} className="text-xs text-[var(--color-text-muted)] tabular-nums">
       {formatted}
     </time>
   )
