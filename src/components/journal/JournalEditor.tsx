@@ -435,7 +435,6 @@ export function JournalEditor({
               sizeRef={bodyRef}
               onChange={handleDrawingChange}
             />
-            <EemoWidget emotion={eemoEmotion} message={eemoMessage} isLoading={eemoLoading} />
           </div>
         </div>
       </div>
@@ -445,6 +444,9 @@ export function JournalEditor({
         <MoodSelector value={mood} onChange={setMood} />
         <WordCount count={wordCount} />
       </footer>
+
+      {/* ── Eemo — fixed to viewport top-right, outside the journal paper ── */}
+      <EemoWidget emotion={eemoEmotion} message={eemoMessage} isLoading={eemoLoading} />
     </div>
   )
 }
