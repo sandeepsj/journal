@@ -195,27 +195,35 @@ body {
 
 .ruled-paper {
   background-color: #FEFCF8;
+  /* Only the red margin line — horizontal rules live on the writing area */
   background-image:
-    /* Red margin line */
     linear-gradient(90deg,
       transparent calc(var(--rule-margin) - 1px),
       #F5C4C4 calc(var(--rule-margin) - 1px),
       #F5C4C4 var(--rule-margin),
       transparent var(--rule-margin)
-    ),
-    /* Horizontal ruled lines */
+    );
+  background-size: 100% 100%;
+  background-attachment: local;
+}
+
+/* Applied to the writing area div so lines start at y=0 of the text area */
+.ruled-lines {
+  background-image:
     linear-gradient(transparent calc(var(--rule-h) - 1px), var(--rule-color) calc(var(--rule-h) - 1px));
   background-size: 100% var(--rule-h);
-  background-attachment: local;
+  background-position: 0 0;
 }
 
 .ruled-text {
   line-height: var(--rule-h);
   padding-left: calc(var(--rule-margin) + 1.25rem);
   padding-right: 1.5rem;
-  padding-top: 0;
-  /* First line sits on the first ruled line */
-  vertical-align: top;
+  /* Push first baseline down to sit on the first ruled line.
+     Value = rule-h minus the font's ascent within the line box.
+     Kalam at 1.35rem: half-leading ≈ 0.7rem + ascent ≈ 1.08rem = 1.78rem from top,
+     so shift = 2.75 - 1.78 = 0.97rem */
+  padding-top: 0.9rem;
 }
 
 /* Horizontal scroll rail — hide scrollbar visually but keep scroll */

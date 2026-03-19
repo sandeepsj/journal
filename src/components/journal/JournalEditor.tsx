@@ -340,7 +340,7 @@ export function JournalEditor({
           </div>
 
           {/* Ruled writing area + canvas overlay */}
-          <div className="flex-1 px-0 pt-0 pb-8 relative">
+          <div className="flex-1 px-0 pt-0 pb-8 relative ruled-lines">
             <textarea
               ref={bodyRef}
               value={body}
