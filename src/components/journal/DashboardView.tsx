@@ -46,7 +46,7 @@ export function DashboardView({ userName }: DashboardViewProps) {
   const greeting = getGreeting(userName)
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-8 pb-28 space-y-8 animate-page-enter relative">
+    <div className="max-w-5xl mx-auto px-6 py-8 pb-36 space-y-8 animate-page-enter relative">
       {/* Greeting */}
       <div>
         <h1 className="font-serif text-4xl text-[var(--color-text-primary)] animate-slide-up stagger-1">{greeting}</h1>
@@ -193,7 +193,7 @@ export function DashboardView({ userName }: DashboardViewProps) {
       <button
         onClick={() => router.push('/journal/new')}
         aria-label="New journal entry"
-        className="fixed bottom-8 right-8 md:bottom-12 md:right-12 xl:right-16 w-14 h-14 rounded-full bg-[var(--color-accent)] text-white shadow-[var(--shadow-lg)] hover:opacity-90 hover:shadow-[var(--shadow-accent)] hover:scale-110 active:scale-95 transition-all duration-150 flex items-center justify-center z-30"
+        className="fixed bottom-20 right-5 md:bottom-10 md:right-10 w-14 h-14 rounded-full bg-[var(--color-accent)] text-white shadow-[var(--shadow-lg)] hover:opacity-90 hover:shadow-[var(--shadow-accent)] hover:scale-110 active:scale-95 transition-all duration-150 flex items-center justify-center z-30"
       >
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <path d="M12 5v14M5 12h14" />
