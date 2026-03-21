@@ -65,6 +65,22 @@ export function JournalEditor({
   const wordCount = useWordCount(body)
   const { emotion: eemoEmotion, message: eemoMessage, isLoading: eemoLoading } = useEemo(title, body)
 
+  function insertAtCursor(text: string) {
+    const el = bodyRef.current
+    if (!el) return
+    const start = el.selectionStart ?? el.value.length
+    const end = el.selectionEnd ?? el.value.length
+    const next = el.value.slice(0, start) + text + el.value.slice(end)
+    setBody(next)
+    textCurrentRef.current = { ...textCurrentRef.current, body: next }
+    scheduleTextHistoryPush()
+    // Restore cursor after the inserted text
+    requestAnimationFrame(() => {
+      el.selectionStart = el.selectionEnd = start + text.length
+      el.focus()
+    })
+  }
+
   // Auto-resize textarea — must stay in sync with ruled lines
   useEffect(() => {
     const el = bodyRef.current
@@ -380,7 +396,7 @@ export function JournalEditor({
               paints above the drawing canvas (z-2), even though canvas has an
               explicit z-index and the toolbar's backdrop-filter creates a stacking
               context without one */}
-          <div className="flex justify-start px-6 py-2 border-b border-[var(--color-paper-line)] relative z-10 overflow-x-auto scrollbar-hide">
+          <div className="flex items-center justify-between px-6 py-2 border-b border-[var(--color-paper-line)] relative z-10 overflow-x-auto scrollbar-hide gap-3">
             <DrawingToolbar
               mode={mode}
               onModeChange={setMode}
@@ -400,6 +416,27 @@ export function JournalEditor({
               onUndo={mode === 'draw' ? handleUndo : handleTextUndo}
               onRedo={mode === 'draw' ? handleRedo : handleTextRedo}
             />
+
+            {/* Quick punctuation — handy for stylus/tablet use */}
+            {mode === 'write' && (
+              <div className="flex items-center gap-1 flex-shrink-0">
+                {['.', ',', '?', '!'].map((char) => (
+                  <button
+                    key={char}
+                    type="button"
+                    onPointerDown={(e) => {
+                      // prevent textarea blur before we read selectionStart
+                      e.preventDefault()
+                      insertAtCursor(char)
+                    }}
+                    aria-label={`Insert ${char}`}
+                    className="w-8 h-8 rounded-lg text-sm font-mono font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-muted)] border border-[var(--color-border)] transition-colors duration-150 flex items-center justify-center"
+                  >
+                    {char}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Ruled writing area + canvas overlay */}
