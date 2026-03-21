@@ -46,6 +46,7 @@ export function DashboardView({ userName }: DashboardViewProps) {
   const greeting = getGreeting(userName)
 
   return (
+    <>
     <div className="max-w-5xl mx-auto px-6 py-8 pb-36 space-y-8 animate-page-enter relative">
       {/* Greeting */}
       <div>
@@ -189,7 +190,9 @@ export function DashboardView({ userName }: DashboardViewProps) {
         </div>
       </Modal>
 
-      {/* Floating action button — new entry */}
+    </div>
+
+      {/* Floating action button — outside animated container so position:fixed works correctly */}
       <button
         onClick={() => router.push('/journal/new')}
         aria-label="New journal entry"
@@ -199,6 +202,6 @@ export function DashboardView({ userName }: DashboardViewProps) {
           <path d="M12 5v14M5 12h14" />
         </svg>
       </button>
-    </div>
+    </>
   )
 }
