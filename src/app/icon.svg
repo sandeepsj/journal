@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Sage green rounded background -->
+  <rect width="32" height="32" rx="7" fill="#7C9E8A"/>
+  <!-- Book pages (right side) -->
+  <rect x="10" y="7" width="13" height="18" rx="2" fill="#FAF8F5"/>
+  <!-- Book spine -->
+  <rect x="10" y="7" width="3.5" height="18" rx="1" fill="#5E8470"/>
+  <!-- Ruled lines -->
+  <line x1="16" y1="12" x2="21" y2="12" stroke="#C4D9CC" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="16" y1="15.5" x2="21" y2="15.5" stroke="#C4D9CC" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="16" y1="19" x2="21" y2="19" stroke="#C4D9CC" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- Pen/nib hint -->
+  <line x1="16" y1="22" x2="19" y2="22" stroke="#C4D9CC" stroke-width="1.5" stroke-linecap="round"/>
+</svg>
