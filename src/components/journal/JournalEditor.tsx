@@ -393,10 +393,9 @@ export function JournalEditor({
           )}
 
           {/* Drawing toolbar — relative + z-10 ensures the color picker dropdown
-              paints above the drawing canvas (z-2), even though canvas has an
-              explicit z-index and the toolbar's backdrop-filter creates a stacking
-              context without one */}
-          <div className="flex items-center justify-between px-6 py-2 border-b border-[var(--color-paper-line)] relative z-10 overflow-x-auto scrollbar-hide gap-3">
+              paints above the drawing canvas (z-2). No overflow-x-auto here so
+              the color picker popup is not clipped. */}
+          <div className="flex items-center justify-between px-6 py-2 border-b border-[var(--color-paper-line)] relative z-10 gap-3">
             <DrawingToolbar
               mode={mode}
               onModeChange={setMode}
