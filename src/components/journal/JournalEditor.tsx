@@ -13,6 +13,7 @@ import { useWordCount } from '@/hooks/useWordCount'
 import { useEntrySync, type FreshEntryData } from '@/hooks/useEntrySync'
 import { useEemo } from '@/hooks/useEemo'
 import { EemoWidget } from './EemoWidget'
+import { ThemeToggle } from '@/components/layout/ThemeToggle'
 import type { Mood } from '@/types/journal'
 
 export interface JournalEditorProps {
@@ -323,19 +324,22 @@ export function JournalEditor({
 
         <AutoSaveStatus status={status} />
 
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={save}
-          loading={status === 'saving'}
-          disabled={isEmpty}
-          aria-label="Save entry (Cmd+Enter)"
-        >
-          <span className="hidden sm:inline mr-1">Save</span>
-          <kbd className="text-[10px] text-[var(--color-text-muted)] font-mono bg-[var(--color-surface-muted)] px-1.5 py-0.5 rounded border border-[var(--color-border)]">
-            ⌘↵
-          </kbd>
-        </Button>
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={save}
+            loading={status === 'saving'}
+            disabled={isEmpty}
+            aria-label="Save entry (Cmd+Enter)"
+          >
+            <span className="hidden sm:inline mr-1">Save</span>
+            <kbd className="text-[10px] text-[var(--color-text-muted)] font-mono bg-[var(--color-surface-muted)] px-1.5 py-0.5 rounded border border-[var(--color-border)]">
+              ⌘↵
+            </kbd>
+          </Button>
+        </div>
       </header>
 
       {/* ── Paper container ──────────────────────────────── */}
