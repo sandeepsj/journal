@@ -343,9 +343,7 @@ export function JournalEditor({
       </header>
 
       {/* ── Paper container ──────────────────────────────── */}
-      {/* pb-[75vh] gives extra scroll room so users on tablets/stylus can
-          scroll the last lines up to a comfortable hand-writing position. */}
-      <div className="flex-1 flex justify-center px-4 py-8 pb-[75vh] animate-page-enter">
+      <div className="flex-1 flex justify-center px-4 py-8 animate-page-enter">
         <div
           className="ruled-paper w-full max-w-4xl rounded-sm shadow-md flex flex-col"
           style={{ minHeight: 'calc(100vh - 10rem)' }}
@@ -444,8 +442,10 @@ export function JournalEditor({
             )}
           </div>
 
-          {/* Ruled writing area + canvas overlay */}
-          <div className="flex-1 px-0 pt-0 pb-8 relative ruled-lines">
+          {/* Ruled writing area + canvas overlay.
+             pb-[75vh] adds extra ruled scroll space so tablet/stylus users
+             can scroll the last lines up to a comfortable writing position. */}
+          <div className="flex-1 px-0 pt-0 pb-[75vh] relative ruled-lines">
             <textarea
               ref={bodyRef}
               value={body}
