@@ -13,6 +13,7 @@
     "test:ui": "vitest --ui",
     "typecheck": "tsc --noEmit",
     "migrate": "tsx scripts/migrate.ts",
+    "regenerate-embeddings": "tsx scripts/regenerate-embeddings.ts",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },
