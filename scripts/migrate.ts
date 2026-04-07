@@ -184,8 +184,9 @@ async function main() {
   console.log('Connecting to MongoDB...')
   const client = new MongoClient(MONGODB_URI!)
   await client.connect()
-  const db = client.db()
-  console.log('  Connected.\n')
+
+  const db = client.db('muse')
+  console.log(`  Connected to database: muse\n`)
 
   // 3. Fetch entries
   console.log(`Fetching entries for user ${MONGO_USER_ID}...`)
@@ -216,15 +217,18 @@ async function main() {
   for (const entry of entries) {
     const title = entry.title || 'Untitled'
     const folderName = title.trim().slice(0, 60)
+    const createdAt = entry.createdAt ? new Date(entry.createdAt).toISOString() : new Date().toISOString()
+    const updatedAt = entry.updatedAt ? new Date(entry.updatedAt).toISOString() : createdAt
 
     try {
       // Create folder with appProperties for listing
+      // Drive limit: key + value must be ≤ 124 bytes each
       const appProperties: Record<string, string> = {
-        title: title.slice(0, 124),
-        mood: entry.mood ?? '',
+        title: title.slice(0, 100),         // key(5) + value ≤ 124
+        mood: entry.mood ?? '',             // key(4) + value ≤ 124
         wordCount: String(entry.wordCount || 0),
-        excerpt: (entry.body || '').slice(0, 124),
-        createdAt: entry.createdAt.toISOString(),
+        excerpt: (entry.body || '').slice(0, 100), // key(7) + value ≤ 124
+        createdAt,                          // key(9) + 24 char ISO = 33
         pinned: String(entry.pinned ?? false),
       }
 
@@ -242,8 +246,8 @@ async function main() {
         wordCount: entry.wordCount || 0,
         textColor: entry.textColor || '#2C2825',
         pinned: entry.pinned ?? false,
-        createdAt: entry.createdAt.toISOString(),
-        updatedAt: entry.updatedAt.toISOString(),
+        createdAt,
+        updatedAt,
         hasDrawing: !!entry.drawing,
       }
       await createJsonFile(folderId, 'metadata.json', metadata)

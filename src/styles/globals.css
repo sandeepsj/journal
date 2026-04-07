@@ -17,7 +17,9 @@
 
   /* Typography */
   --font-serif: 'Kalam', cursive;
+  --font-kalam: 'Kalam', cursive;
   --font-handwriting: 'Kalam', cursive;
+  --font-inter: 'Inter', system-ui, sans-serif;
   --font-sans:  'Inter', system-ui, sans-serif;
 
   /* Animation */

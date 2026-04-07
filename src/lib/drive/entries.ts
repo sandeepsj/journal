@@ -222,10 +222,10 @@ export async function createEntry(
 
   // 1. Create entry folder with appProperties for listing
   const appProperties = {
-    title: (data.title || 'Untitled').slice(0, 124),
+    title: (data.title || 'Untitled').slice(0, 100),
     mood: data.mood ?? '',
     wordCount: String(countWords(data.body)),
-    excerpt: makeExcerpt(data.body).slice(0, 124),
+    excerpt: makeExcerpt(data.body).slice(0, 100),
     createdAt: now,
     pinned: 'false',
   }
@@ -326,10 +326,10 @@ export async function updateEntry(
 
   // Update appProperties on the folder for listing
   const appProperties = {
-    title: (data.title || 'Untitled').slice(0, 124),
+    title: (data.title || 'Untitled').slice(0, 100),
     mood: data.mood ?? '',
     wordCount: String(updatedMetadata.wordCount),
-    excerpt: makeExcerpt(data.body).slice(0, 124),
+    excerpt: makeExcerpt(data.body).slice(0, 100),
     createdAt: existing.createdAt,
     pinned: String(existing.pinned),
   }
