@@ -13,6 +13,16 @@ Redesign the Eemo widget from a fixed-position overlay to a scroll-aware compone
    - Floating: small circle with emotion face, expands on hover to show message
    - Smooth transition between the two states via Framer Motion
 
+### Rich Text Editor (TipTap)
+Replace the plain `<textarea>` in JournalEditor with TipTap (free, MIT, built on ProseMirror):
+
+1. **Features to add:** bold, italic, bullet lists, numbered lists, headings, block indentation
+2. **Packages:** `@tiptap/react`, `@tiptap/starter-kit` (includes all basics), `@tiptap/extension-placeholder`
+3. **Styling:** TipTap renders into a `<div contenteditable>` — the existing `ruled-text`, `ruled-lines`, and `ruled-paper` CSS classes apply directly. Kalam font, ruled notebook background all stay as-is.
+4. **Toolbar:** Extend the existing `DrawingToolbar` area with formatting buttons (B, I, list, indent) when in write mode
+5. **Storage:** TipTap outputs HTML. Store as HTML in `content.md` (still readable) or convert to markdown on save. Either way the file stays human-readable in Drive.
+6. **Migration:** Existing plain-text entries load fine in TipTap — it treats plain text as paragraphs automatically. No migration needed.
+
 ---
 
 ## Short-term Improvements
