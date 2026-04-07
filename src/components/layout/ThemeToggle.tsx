@@ -1,17 +1,7 @@
-'use client'
-
-import { useTheme } from 'next-themes'
-import { useEffect, useState } from 'react'
+import { useTheme } from './ThemeProvider'
 
 export function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => setMounted(true), [])
-
-  // Avoid hydration mismatch — render nothing until mounted
-  if (!mounted) return <div className="w-8 h-8" />
-
   const isDark = resolvedTheme === 'dark'
 
   return (

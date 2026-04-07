@@ -1,5 +1,3 @@
-import Image from 'next/image'
-
 export type AvatarSize = 'sm' | 'md' | 'lg'
 
 export interface AvatarProps {
@@ -28,13 +26,14 @@ export function Avatar({ src, name, size = 'md' }: AvatarProps) {
 
   if (src) {
     return (
-      <Image
+      <img
         src={src}
         alt={name}
         width={px}
         height={px}
         className="rounded-full object-cover"
         style={{ width: px, height: px }}
+        referrerPolicy="no-referrer"
       />
     )
   }

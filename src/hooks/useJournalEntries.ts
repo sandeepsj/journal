@@ -1,11 +1,11 @@
-'use client'
-
 import { useState, useEffect, useCallback } from 'react'
 import { useDebounce } from './useDebounce'
-import type { JournalEntryListItem } from '@/types/journal'
+import { useAuth } from '@/contexts/AuthContext'
+import { listEntries, deleteEntry as driveDeleteEntry } from '@/lib/drive'
+import type { DriveEntryListItem } from '@/lib/drive'
 
 interface UseJournalEntriesReturn {
-  entries: JournalEntryListItem[]
+  entries: DriveEntryListItem[]
   isLoading: boolean
   error: string | null
   hasMore: boolean
@@ -16,63 +16,65 @@ interface UseJournalEntriesReturn {
 }
 
 export function useJournalEntries(search: string): UseJournalEntriesReturn {
-  const [entries, setEntries] = useState<JournalEntryListItem[]>([])
-  const [page, setPage] = useState(1)
-  const [hasMore, setHasMore] = useState(false)
+  const { accessToken } = useAuth()
+  const [entries, setEntries] = useState<DriveEntryListItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [hasMore, setHasMore] = useState(false)
+  const [nextPageToken, setNextPageToken] = useState<string | undefined>()
 
   const debouncedSearch = useDebounce(search, 300)
 
-  const fetchPage = useCallback(
-    async (pageNum: number, replace: boolean) => {
+  const fetchEntries = useCallback(
+    async (append: boolean, pageToken?: string) => {
+      if (!accessToken) return
       setIsLoading(true)
       setError(null)
       try {
-        const params = new URLSearchParams({ page: String(pageNum) })
-        if (debouncedSearch) params.set('search', debouncedSearch)
-
-        const res = await fetch(`/api/journal?${params}`)
-        if (!res.ok) throw new Error('Failed to load entries')
-
-        const data = await res.json()
-        setEntries((prev) => (replace ? data.entries : [...prev, ...data.entries]))
-        setHasMore(pageNum < data.pagination.pages)
-        setPage(pageNum)
+        const result = await listEntries(accessToken, {
+          search: debouncedSearch || undefined,
+          pageSize: 30,
+          pageToken,
+        })
+        setEntries((prev) => append ? [...prev, ...result.entries] : result.entries)
+        setNextPageToken(result.nextPageToken)
+        setHasMore(!!result.nextPageToken)
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Something went wrong')
+        setError(err instanceof Error ? err.message : 'Failed to load entries')
       } finally {
         setIsLoading(false)
       }
     },
-    [debouncedSearch]
+    [accessToken, debouncedSearch]
   )
 
-  // Refetch from page 1 when search changes
+  // Refetch from start when search changes
   useEffect(() => {
-    fetchPage(1, true)
-  }, [fetchPage])
+    fetchEntries(false)
+  }, [fetchEntries])
 
   const loadMore = useCallback(() => {
-    fetchPage(page + 1, false)
-  }, [fetchPage, page])
+    if (nextPageToken) {
+      fetchEntries(true, nextPageToken)
+    }
+  }, [fetchEntries, nextPageToken])
 
   const deleteEntry = useCallback(
     async (id: string) => {
+      if (!accessToken) return
       // Optimistic remove
       setEntries((prev) => prev.filter((e) => e.id !== id))
       try {
-        const res = await fetch(`/api/journal/${id}`, { method: 'DELETE' })
-        if (!res.ok) throw new Error('Delete failed')
+        await driveDeleteEntry(accessToken, id)
       } catch {
         // Revert on failure
-        fetchPage(1, true)
+        fetchEntries(false)
       }
     },
-    [fetchPage]
+    [accessToken, fetchEntries]
   )
 
-  const refresh = useCallback(() => fetchPage(1, true), [fetchPage])
+  const refresh = useCallback(() => fetchEntries(false), [fetchEntries])
 
   const setPinned = useCallback((id: string, pinned: boolean) => {
     setEntries((prev) => prev.map((e) => (e.id === id ? { ...e, pinned } : e)))

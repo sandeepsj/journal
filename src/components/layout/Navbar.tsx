@@ -1,6 +1,4 @@
-'use client'
-
-import Link from 'next/link'
+import { Link } from 'react-router-dom'
 import { useState, useRef, useEffect } from 'react'
 import { Avatar } from '@/components/ui/Avatar'
 import { Button } from '@/components/ui/Button'
@@ -41,7 +39,7 @@ export function Navbar({ userName, userEmail, userImage, onSignOut }: NavbarProp
     <header className="sticky top-0 z-40 border-b border-[var(--color-border)]/60 bg-[var(--color-bg)]/80 backdrop-blur-md shadow-[var(--shadow-xs)]">
       <div className="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
         <Link
-          href="/"
+          to="/"
           className="font-serif text-2xl text-[var(--color-text-primary)] hover:text-[var(--color-accent)] transition-colors duration-150"
         >
           Muse

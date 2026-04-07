@@ -1,7 +1,5 @@
-'use client'
-
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/Button'
 import { SearchInput } from './SearchInput'
 import { JournalCard } from './JournalCard'
@@ -26,7 +24,7 @@ function getGreeting(name: string): string {
 }
 
 export function DashboardView({ userName }: DashboardViewProps) {
-  const router = useRouter()
+  const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [deleteId, setDeleteId] = useState<string | null>(null)
 
@@ -62,7 +60,7 @@ export function DashboardView({ userName }: DashboardViewProps) {
 
       {/* Ask your journal card */}
       <button
-        onClick={() => router.push('/recall')}
+        onClick={() => navigate('/recall')}
         className="w-full text-left bg-gradient-to-r from-[var(--color-accent-light)] to-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl px-5 py-4 flex items-center gap-4 hover:border-[var(--color-accent)] shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-accent)] transition-all duration-200 group"
       >
         <div className="w-10 h-10 rounded-full bg-[var(--color-accent-light)] flex items-center justify-center flex-shrink-0 group-hover:bg-[var(--color-accent)] group-hover:shadow-[var(--shadow-accent)] transition-all duration-200">
@@ -87,7 +85,7 @@ export function DashboardView({ userName }: DashboardViewProps) {
           <PinnedRail
             entries={pinnedEntries}
             isLoading={pinnedLoading}
-            onEntryClick={(id) => router.push(`/journal/${id}`)}
+            onEntryClick={(id) => navigate(`/journal/${id}`)}
             onUnpin={(id) => {
               togglePin(id, true)
               setPinned(id, false)
@@ -132,7 +130,7 @@ export function DashboardView({ userName }: DashboardViewProps) {
         <EmptyState
           title="Your story starts here"
           description="Write your first entry and begin building your personal memory."
-          action={{ label: 'Write your first entry', onClick: () => router.push('/journal/new') }}
+          action={{ label: 'Write your first entry', onClick: () => navigate('/journal/new') }}
         />
       )}
 
@@ -151,7 +149,7 @@ export function DashboardView({ userName }: DashboardViewProps) {
               <JournalCard
                 key={entry.id}
                 {...entry}
-                onClick={() => router.push(`/journal/${entry.id}`)}
+                onClick={() => navigate(`/journal/${entry.id}`)}
                 onDelete={() => setDeleteId(entry.id)}
                 isPinned={entry.pinned}
                 onPin={(meta) => {
@@ -194,7 +192,7 @@ export function DashboardView({ userName }: DashboardViewProps) {
 
       {/* Floating action button — outside animated container so position:fixed works correctly */}
       <button
-        onClick={() => router.push('/journal/new')}
+        onClick={() => navigate('/journal/new')}
         aria-label="New journal entry"
         className="fixed bottom-20 right-5 md:bottom-10 md:right-10 w-14 h-14 rounded-full bg-[var(--color-accent)] text-white shadow-[var(--shadow-lg)] hover:opacity-90 hover:shadow-[var(--shadow-accent)] hover:scale-110 active:scale-95 transition-all duration-150 flex items-center justify-center z-30"
       >

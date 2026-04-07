@@ -1,5 +1,6 @@
-'use client'
 import { useEffect, useRef, useState, useCallback } from 'react'
+import { useAuth } from '@/contexts/AuthContext'
+import { getEntry } from '@/lib/drive'
 
 export interface FreshEntryData {
   title: string
@@ -14,19 +15,17 @@ export function useEntrySync(
   isDirty: boolean,
   onReload: (data: FreshEntryData) => void
 ) {
+  const { accessToken } = useAuth()
   const [isStale, setIsStale] = useState(false)
   const channelRef = useRef<BroadcastChannel | null>(null)
   const isDirtyRef = useRef(isDirty)
 
-  // Keep ref in sync (avoid stale closure in channel listener)
   useEffect(() => { isDirtyRef.current = isDirty }, [isDirty])
 
   const fetchAndReload = useCallback(async () => {
-    if (!entryId) return
+    if (!entryId || !accessToken) return
     try {
-      const res = await fetch(`/api/journal/${entryId}`)
-      if (!res.ok) return
-      const data = await res.json()
+      const data = await getEntry(accessToken, entryId)
       onReload({
         title: data.title ?? '',
         body: data.body ?? '',
@@ -37,9 +36,9 @@ export function useEntrySync(
       setIsStale(false)
     } catch { /* network error — leave stale banner up */ }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entryId])
+  }, [entryId, accessToken])
 
-  // BroadcastChannel setup
+  // BroadcastChannel for cross-tab sync
   useEffect(() => {
     if (!entryId || typeof BroadcastChannel === 'undefined') return
     const ch = new BroadcastChannel('muse-journal')
@@ -48,9 +47,9 @@ export function useEntrySync(
     ch.onmessage = (e) => {
       if (e.data?.entryId !== entryId) return
       if (!isDirtyRef.current) {
-        fetchAndReload()   // silent reload
+        fetchAndReload()
       } else {
-        setIsStale(true)   // show banner, auto-save paused by caller
+        setIsStale(true)
       }
     }
 

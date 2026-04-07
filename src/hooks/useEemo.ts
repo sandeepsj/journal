@@ -1,7 +1,8 @@
-'use client'
-
 import { useState, useRef, useEffect } from 'react'
+import { useAuth } from '@/contexts/AuthContext'
 import type { Emotion } from 'react-emotion-face'
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL || ''
 
 export interface EemoState {
   emotion: Emotion | null
@@ -10,6 +11,7 @@ export interface EemoState {
 }
 
 export function useEemo(title: string, body: string): EemoState {
+  const { accessToken } = useAuth()
   const [emotion, setEmotion] = useState<Emotion | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -21,13 +23,12 @@ export function useEemo(title: string, body: string): EemoState {
   useEffect(() => {
     const content = `${title}\n\n${body}`.trim()
 
-    // Clear pending debounce
     if (debounceRef.current) {
       clearTimeout(debounceRef.current)
       debounceRef.current = null
     }
 
-    if (content.length < 20) return
+    if (content.length < 20 || !accessToken || !API_BASE) return
 
     // Skip if content hasn't changed meaningfully since last API call
     const last = lastSentContentRef.current
@@ -35,7 +36,6 @@ export function useEemo(title: string, body: string): EemoState {
     if (last && lengthDiff < 50 && content.endsWith(last.slice(-30))) return
 
     debounceRef.current = setTimeout(async () => {
-      // Cancel any in-flight request
       if (abortRef.current) {
         abortRef.current.abort()
       }
@@ -45,9 +45,12 @@ export function useEemo(title: string, body: string): EemoState {
       setIsLoading(true)
 
       try {
-        const res = await fetch('/api/eemo', {
+        const res = await fetch(`${API_BASE}/api/eemo`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`,
+          },
           body: JSON.stringify({ content }),
           signal: controller.signal,
         })
@@ -62,10 +65,8 @@ export function useEemo(title: string, body: string): EemoState {
           setMessage(data.message ?? null)
         }
       } catch (err) {
-        // Ignore abort errors silently
         if (err instanceof Error && err.name === 'AbortError') return
         console.error('[useEemo] fetch error:', err)
-        // Keep last known emotion on error
       } finally {
         setIsLoading(false)
       }
@@ -77,9 +78,8 @@ export function useEemo(title: string, body: string): EemoState {
         debounceRef.current = null
       }
     }
-  }, [title, body])
+  }, [title, body, accessToken])
 
-  // Cleanup abort controller on unmount
   useEffect(() => {
     return () => {
       if (abortRef.current) abortRef.current.abort()

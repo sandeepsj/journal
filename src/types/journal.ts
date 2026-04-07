@@ -1,18 +1,18 @@
-import type { Mood } from '@/lib/db/models/JournalEntry'
+export type Mood = 'calm' | 'happy' | 'anxious' | 'sad' | 'grateful'
 
-export type { Mood }
-
-export interface JournalEntryDTO {
+export interface JournalEntry {
   id: string
-  userId: string
   title: string
   body: string
+  bodyPlainText: string
   mood: Mood | null
   wordCount: number
-  drawing?: string | null
   textColor?: string
+  drawing?: string | null
+  pinned: boolean
   createdAt: string
   updatedAt: string
+  embedding?: number[]
 }
 
 // List item — without body/embedding for performance

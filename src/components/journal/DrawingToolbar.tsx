@@ -1,4 +1,3 @@
-'use client'
 
 import { ColorPicker } from './ColorPicker'
 

@@ -26,7 +26,7 @@ export default defineConfig({
           globals: true,
           setupFiles: ['./src/test/setup.tsx'],
           include: ['src/**/*.test.{ts,tsx}'],
-          exclude: ['node_modules', '.next', '**/*.stories.tsx'],
+          exclude: ['node_modules', 'dist', '**/*.stories.tsx'],
         },
         resolve: {
           alias: {

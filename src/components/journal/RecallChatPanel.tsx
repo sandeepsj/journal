@@ -1,9 +1,11 @@
-'use client'
-
 import { useState, useRef, useEffect, FormEvent } from 'react'
-import { Button } from '@/components/ui/Button'
+import { useAuth } from '@/contexts/AuthContext'
+import { loadAllEmbeddings } from '@/lib/drive'
+import { findSimilar, type EmbeddedEntry } from '@/lib/search/cosine'
 import { AIRecallCard } from './AIRecallCard'
 import { LoadingDots } from '@/components/ui/LoadingDots'
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL || ''
 
 export interface Citation {
   id: string
@@ -49,10 +51,12 @@ function renderMarkdown(text: string) {
 }
 
 export function RecallChatPanel({ sessionId, initialMessages, onSessionCreated, onOpenSidebar }: RecallChatPanelProps) {
+  const { accessToken } = useAuth()
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages)
   const [query, setQuery] = useState('')
   const [isStreaming, setIsStreaming] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const embeddingsRef = useRef<EmbeddedEntry[] | null>(null)
 
   const bottomRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -89,7 +93,7 @@ export function RecallChatPanel({ sessionId, initialMessages, onSessionCreated, 
   async function handleSubmit(e: FormEvent | React.KeyboardEvent) {
     e.preventDefault()
     const q = query.trim()
-    if (!q || isStreaming) return
+    if (!q || isStreaming || !accessToken || !API_BASE) return
 
     const userMessage: ChatMessage = { role: 'user', content: q }
     setMessages((prev) => [...prev, userMessage])
@@ -102,61 +106,67 @@ export function RecallChatPanel({ sessionId, initialMessages, onSessionCreated, 
     setMessages((prev) => [...prev, { role: 'assistant', content: '', citations: [] }])
 
     try {
-      const res = await fetch('/api/recall', {
+      // 1. Load embeddings (cached after first call)
+      if (!embeddingsRef.current) {
+        embeddingsRef.current = await loadAllEmbeddings(accessToken)
+      }
+
+      // 2. Embed the query via Vercel proxy
+      const embedRes = await fetch(`${API_BASE}/api/embed`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: q, sessionId }),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ text: q }),
+      })
+      if (!embedRes.ok) throw new Error('Failed to embed query')
+      const { embedding: queryEmbedding } = await embedRes.json()
+
+      // 3. Find similar entries via cosine similarity
+      const similar = findSimilar(queryEmbedding, embeddingsRef.current, 5)
+
+      // Build citations for UI
+      const citations: Citation[] = similar.map((s) => ({
+        id: s.fileId,
+        title: s.title,
+        excerpt: s.body.slice(0, 120) + (s.body.length > 120 ? '...' : ''),
+        createdAt: '',
+        mood: null,
+      }))
+
+      setMessages((prev) => {
+        const next = [...prev]
+        next[next.length - 1] = { ...next[next.length - 1], citations }
+        return next
       })
 
-      if (!res.ok) throw new Error('Recall failed')
-      if (!res.body) throw new Error('No response stream')
+      // 4. Send context to /api/recall for AI answer
+      const context = similar.map((s) => ({ title: s.title, body: s.body }))
+      const recallRes = await fetch(`${API_BASE}/api/recall`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ query: q, context }),
+      })
+      if (!recallRes.ok) throw new Error('Recall failed')
+      const { answer } = await recallRes.json()
 
-      const reader = res.body.getReader()
-      const decoder = new TextDecoder()
-      let buffer = ''
-
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-
-        buffer += decoder.decode(value, { stream: true })
-        const lines = buffer.split('\n')
-        buffer = lines.pop() ?? ''
-
-        for (const line of lines) {
-          if (!line.startsWith('data: ')) continue
-          const data = line.slice(6)
-          if (data === '[DONE]') break
-
-          try {
-            const parsed = JSON.parse(data)
-            if (parsed.type === 'session') {
-              if (!sessionId && parsed.sessionId) {
-                onSessionCreated(parsed.sessionId, q.slice(0, 40) + (q.length > 40 ? '...' : ''))
-              }
-            } else if (parsed.type === 'citations') {
-              setMessages((prev) => {
-                const next = [...prev]
-                next[next.length - 1] = { ...next[next.length - 1], citations: parsed.citations }
-                return next
-              })
-            } else if (parsed.type === 'text') {
-              setMessages((prev) => {
-                const next = [...prev]
-                next[next.length - 1] = { ...next[next.length - 1], content: next[next.length - 1].content + parsed.text }
-                return next
-              })
-            } else if (parsed.type === 'error') {
-              setError('AI is busy right now, please try again in a moment.')
-            }
-          } catch {
-            // ignore malformed chunks
-          }
-        }
+      // Create a session ID for new conversations
+      if (!sessionId) {
+        const newSessionId = crypto.randomUUID()
+        onSessionCreated(newSessionId, q.slice(0, 40) + (q.length > 40 ? '...' : ''))
       }
+
+      setMessages((prev) => {
+        const next = [...prev]
+        next[next.length - 1] = { ...next[next.length - 1], content: answer }
+        return next
+      })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong')
-      // Remove the empty optimistic bubble on error
       setMessages((prev) => prev.slice(0, -1))
     } finally {
       setIsStreaming(false)

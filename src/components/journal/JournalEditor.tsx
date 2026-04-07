@@ -1,7 +1,5 @@
-'use client'
-
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
+import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/Button'
 import { MoodSelector } from './MoodSelector'
 import { WordCount } from './WordCount'
@@ -12,6 +10,9 @@ import { useAutoSave } from '@/hooks/useAutoSave'
 import { useWordCount } from '@/hooks/useWordCount'
 import { useEntrySync, type FreshEntryData } from '@/hooks/useEntrySync'
 import { useEemo } from '@/hooks/useEemo'
+import { useAuth } from '@/contexts/AuthContext'
+import { createEntry, updateEntry, togglePin as driveTogglePin } from '@/lib/drive'
+import { generateAndStoreEmbedding } from '@/lib/embeddings'
 import { EemoWidget } from './EemoWidget'
 import { ThemeToggle } from '@/components/layout/ThemeToggle'
 import type { Mood } from '@/types/journal'
@@ -35,7 +36,8 @@ export function JournalEditor({
   initialDrawing = null,
   initialPinned = false,
 }: JournalEditorProps) {
-  const router = useRouter()
+  const navigate = useNavigate()
+  const { accessToken } = useAuth()
   const [isPinned, setIsPinned] = useState(initialPinned)
   const [title, setTitle] = useState(initialTitle)
   const [body, setBody] = useState(initialBody)
@@ -205,27 +207,30 @@ export function JournalEditor({
 
   const handleSave = useCallback(
     async (data: { title: string; body: string; mood: Mood | null; textColor: string; drawing: string | null }) => {
+      if (!accessToken) throw new Error('Not authenticated')
       const hasContent = data.title.trim() || data.body.trim()
       if (!hasContent) return
 
       const isNew = !savedEntryIdRef.current
-      const url = isNew ? '/api/journal' : `/api/journal/${savedEntryIdRef.current}`
-
-      const res = await fetch(url, {
-        method: isNew ? 'POST' : 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      })
-
-      if (!res.ok) throw new Error('Save failed')
 
       if (isNew) {
-        const json = await res.json()
-        savedEntryIdRef.current = json.id
+        const result = await createEntry(accessToken, data)
+        savedEntryIdRef.current = result.id
+      } else {
+        await updateEntry(accessToken, savedEntryIdRef.current!, data)
       }
       notifySavedRef.current()
+
+      // Generate embedding in the background (don't block save UX)
+      const fileId = savedEntryIdRef.current
+      if (fileId) {
+        const text = `${data.title}\n\n${data.body}`.trim()
+        generateAndStoreEmbedding(accessToken, fileId, text).catch((err) =>
+          console.error('[JournalEditor] embedding error:', err)
+        )
+      }
     },
-    []
+    [accessToken]
   )
 
   // autoSaveEnabled state lets us pass !isStale to useAutoSave without a circular dep:
@@ -250,17 +255,11 @@ export function JournalEditor({
   useEffect(() => { setAutoSaveEnabled(!isStale) }, [isStale])
 
   async function handleTogglePin() {
-    if (!savedEntryIdRef.current) return
+    if (!savedEntryIdRef.current || !accessToken) return
     const pinning = !isPinned
     try {
-      const res = await fetch(`/api/journal/${savedEntryIdRef.current}/pin`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pinned: pinning }),
-      })
-      if (res.ok) {
-        setIsPinned(pinning)
-      }
+      await driveTogglePin(accessToken, savedEntryIdRef.current, pinning)
+      setIsPinned(pinning)
     } catch (err) {
       console.error('[JournalEditor] togglePin error:', err)
     }
@@ -291,7 +290,7 @@ export function JournalEditor({
       <header className="flex items-center justify-between px-6 py-3 border-b border-[var(--color-border)]/60 bg-[var(--color-bg)]/80 backdrop-blur-md shadow-[var(--shadow-xs)] sticky top-0 z-20">
         <div className="flex items-center gap-2">
           <button
-            onClick={() => router.push('/')}
+            onClick={() => navigate('/')}
             className="flex items-center gap-1.5 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] rounded-md px-1"
             aria-label="Back to dashboard"
           >

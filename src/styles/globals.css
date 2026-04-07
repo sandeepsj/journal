@@ -1,0 +1,280 @@
+@import "tailwindcss";
+
+/* ── Design Tokens ─────────────────────────────────────────────── */
+:root {
+  /* Colors */
+  --color-bg:             #FAF8F5;
+  --color-surface:        #FFFFFF;
+  --color-surface-muted:  #F2EEE8;
+  --color-border:         #E8E2D9;
+  --color-text-primary:   #2C2825;
+  --color-text-secondary: #8B7D72;
+  --color-text-muted:     #B5A99F;
+  --color-accent:         #7C9E8A;
+  --color-accent-light:   #EAF1EC;
+  --color-error:          #C4614E;
+  --color-success:        #6A9B77;
+
+  /* Typography */
+  --font-serif: 'Kalam', cursive;
+  --font-handwriting: 'Kalam', cursive;
+  --font-sans:  'Inter', system-ui, sans-serif;
+
+  /* Animation */
+  --duration-fast:   150ms;
+  --duration-normal: 300ms;
+  --duration-slow:   500ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Shadow elevation system */
+  --shadow-xs:     0 1px 2px rgba(44,40,37,0.05);
+  --shadow-sm:     0 2px 8px rgba(44,40,37,0.07), 0 1px 2px rgba(44,40,37,0.04);
+  --shadow-md:     0 4px 16px rgba(44,40,37,0.10), 0 2px 4px rgba(44,40,37,0.05);
+  --shadow-lg:     0 8px 32px rgba(44,40,37,0.14), 0 4px 8px rgba(44,40,37,0.06);
+  --shadow-xl:     0 16px 48px rgba(44,40,37,0.18), 0 6px 12px rgba(44,40,37,0.08);
+  --shadow-accent: 0 4px 20px rgba(124,158,138,0.25);
+
+  /* Glassmorphism tokens */
+  --glass-bg:       rgba(255,255,255,0.75);
+  --glass-bg-warm:  rgba(250,248,245,0.80);
+  --glass-border:   rgba(232,226,217,0.60);
+  --glass-blur:     blur(12px);
+  --glass-blur-sm:  blur(8px);
+
+  /* Paper tokens */
+  --color-paper:        #FEFCF8;
+  --color-paper-line:   #EAE4DC;
+  --color-paper-margin: #F5C4C4;
+  --color-dot-pattern:  #D4CEC8;
+}
+
+/* ── Dark theme overrides ───────────────────────────────────────── */
+html.dark {
+  --color-bg:             #1C1917;
+  --color-surface:        #252220;
+  --color-surface-muted:  #2E2A27;
+  --color-border:         #3D3733;
+  --color-text-primary:   #F0EBE6;
+  --color-text-secondary: #BDB5AF;
+  --color-text-muted:     #7A7068;
+  --color-accent:         #8FB5A0;
+  --color-accent-light:   #1E3328;
+  --color-error:          #E8907E;
+  --color-success:        #7FB88A;
+
+  /* Paper tokens */
+  --color-paper:        #201D1B;
+  --color-paper-line:   #2E2A27;
+  --color-paper-margin: #5C3030;
+  --color-dot-pattern:  #272320;
+
+  /* Shadows (deeper on dark) */
+  --shadow-xs:     0 1px 2px rgba(0,0,0,0.18);
+  --shadow-sm:     0 2px 8px rgba(0,0,0,0.22), 0 1px 2px rgba(0,0,0,0.14);
+  --shadow-md:     0 4px 16px rgba(0,0,0,0.28), 0 2px 4px rgba(0,0,0,0.16);
+  --shadow-lg:     0 8px 32px rgba(0,0,0,0.34), 0 4px 8px rgba(0,0,0,0.18);
+  --shadow-xl:     0 16px 48px rgba(0,0,0,0.40), 0 6px 12px rgba(0,0,0,0.20);
+  --shadow-accent: 0 4px 20px rgba(143,181,160,0.20);
+
+  /* Glass */
+  --glass-bg:       rgba(37,34,32,0.82);
+  --glass-bg-warm:  rgba(30,27,25,0.88);
+  --glass-border:   rgba(61,55,51,0.60);
+}
+
+/* ── Theme mapping ─────────────────────────────────────────────── */
+@theme inline {
+  --font-sans: var(--font-sans);
+  --font-serif: var(--font-serif);
+  --color-background: var(--color-bg);
+  --color-foreground: var(--color-text-primary);
+  --color-surface: var(--color-surface);
+  --color-border: var(--color-border);
+  --color-accent: var(--color-accent);
+  --color-muted: var(--color-text-muted);
+  --color-error: var(--color-error);
+  --color-success: var(--color-success);
+}
+
+/* ── Base ──────────────────────────────────────────────────────── */
+html {
+  font-size: 16px;
+}
+
+body {
+  background-color: var(--color-bg);
+  /* Subtle warm dot pattern — like journal paper */
+  background-image: radial-gradient(circle, var(--color-dot-pattern) 1px, transparent 1px);
+  background-size: 24px 24px;
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+}
+
+/* ── Keyframes ─────────────────────────────────────────────────── */
+@keyframes wordFadeIn {
+  from { opacity: 0; transform: translateY(2px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pageEnter {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes cursorBlink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+@keyframes inkDrop {
+  0%   { transform: scale(0); opacity: 0.8; }
+  60%  { transform: scale(1.2); opacity: 0.4; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideUpFade {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes shimmer {
+  from { background-position: -200% center; }
+  to   { background-position: 200% center; }
+}
+
+/* ── Animation Utilities ───────────────────────────────────────── */
+.animate-word-fade {
+  animation: wordFadeIn var(--duration-fast) var(--ease-out) both;
+}
+
+.animate-page-enter {
+  animation: pageEnter var(--duration-normal) var(--ease-out) both;
+}
+
+.animate-cursor-blink {
+  animation: cursorBlink 1s step-end infinite;
+}
+
+.animate-fade-in {
+  animation: fadeIn var(--duration-fast) ease-out both;
+}
+
+.animate-slide-up {
+  animation: slideUpFade 400ms var(--ease-out) both;
+}
+
+.animate-scale-in {
+  animation: scaleIn 300ms var(--ease-spring) both;
+}
+
+/* Stagger helpers */
+.stagger-1 { animation-delay: 60ms; }
+.stagger-2 { animation-delay: 120ms; }
+.stagger-3 { animation-delay: 180ms; }
+.stagger-4 { animation-delay: 240ms; }
+.stagger-5 { animation-delay: 300ms; }
+
+/* ── Glass utility classes ─────────────────────────────────────── */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  border-color: var(--glass-border);
+}
+
+.glass-warm {
+  background: var(--glass-bg-warm);
+  backdrop-filter: var(--glass-blur);
+  border-color: var(--glass-border);
+}
+
+/* ── Reduced motion ────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .animate-word-fade,
+  .animate-page-enter,
+  .animate-cursor-blink,
+  .animate-fade-in,
+  .animate-slide-up,
+  .animate-scale-in {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ── Focus styles ──────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Editor inputs should never show a focus ring — the caret is enough */
+.ruled-paper input:focus-visible,
+.ruled-paper textarea:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+/* ── Scrollbar (subtle) ────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
+
+/* ── Ruled paper ───────────────────────────────────────────────── */
+/* Line height must match --rule-h exactly for text to sit on lines */
+:root {
+  --rule-h: 2.75rem;   /* height of one ruled line */
+  --rule-margin: 4rem; /* left red-margin position */
+}
+
+.ruled-paper {
+  background-color: var(--color-paper);
+  /* Only the red margin line — horizontal rules live on the writing area */
+  background-image:
+    linear-gradient(90deg,
+      transparent calc(var(--rule-margin) - 1px),
+      var(--color-paper-margin) calc(var(--rule-margin) - 1px),
+      var(--color-paper-margin) var(--rule-margin),
+      transparent var(--rule-margin)
+    );
+  background-size: 100% 100%;
+  background-attachment: local;
+}
+
+/* Applied to the writing area div so lines start at y=0 of the text area */
+.ruled-lines {
+  background-image:
+    linear-gradient(transparent calc(var(--rule-h) - 1px), var(--color-paper-line) calc(var(--rule-h) - 1px));
+  background-size: 100% var(--rule-h);
+  background-position: 0 0;
+}
+
+.ruled-text {
+  line-height: var(--rule-h);
+  padding-left: calc(var(--rule-margin) + 1.25rem);
+  padding-right: 1.5rem;
+  /* Push first baseline down to sit on the first ruled line.
+     Value = rule-h minus the font's ascent within the line box.
+     Kalam at 1.35rem: half-leading ~ 0.7rem + ascent ~ 1.08rem = 1.78rem from top,
+     so shift = 2.75 - 1.78 = 0.97rem */
+  padding-top: 0.9rem;
+}
+
+/* Horizontal scroll rail — hide scrollbar visually but keep scroll */
+.scrollbar-hide {
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
