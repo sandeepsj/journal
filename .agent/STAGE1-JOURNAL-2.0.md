@@ -101,7 +101,7 @@ Browser                          Vercel Function                    Google
 
 ```ts
 // api/embed.ts
-const ALLOWED_USERS = ['sandeep@gmail.com', ...]; // max 10
+const ALLOWED_USERS = ['user@example.com', ...]; // max 10
 
 export default async function handler(req, res) {
   // 1. Extract Google token
@@ -145,7 +145,7 @@ export default async function handler(req, res) {
 ```
 OPENAI_API_KEY=sk-...
 ANTHROPIC_API_KEY=sk-ant-...
-ALLOWED_USERS=sandeep@gmail.com,friend1@gmail.com,...
+ALLOWED_USERS=user@example.com,friend@example.com,...
 ```
 
 ### Deployment
