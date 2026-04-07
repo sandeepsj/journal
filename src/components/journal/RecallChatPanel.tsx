@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, FormEvent } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { loadAllEmbeddings } from '@/lib/drive'
 import { findSimilar, type EmbeddedEntry } from '@/lib/search/cosine'
@@ -51,6 +52,7 @@ function renderMarkdown(text: string) {
 }
 
 export function RecallChatPanel({ sessionId, initialMessages, onSessionCreated, onOpenSidebar }: RecallChatPanelProps) {
+  const navigate = useNavigate()
   const { accessToken } = useAuth()
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages)
   const [query, setQuery] = useState('')
@@ -178,6 +180,15 @@ export function RecallChatPanel({ sessionId, initialMessages, onSessionCreated, 
     <div className="flex flex-col h-full bg-[var(--color-surface-muted)] relative">
       {/* Header */}
       <header className="flex-shrink-0 flex items-center h-14 px-4 border-b border-[var(--color-border)] bg-[var(--color-surface)] sticky top-0 z-10 gap-3">
+        <button
+          onClick={() => navigate('/')}
+          className="p-1.5 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] rounded-md hover:bg-[var(--color-surface-muted)] transition-colors"
+          aria-label="Back to dashboard"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="m15 18-6-6 6-6" />
+          </svg>
+        </button>
         <button
           onClick={onOpenSidebar}
           className="md:hidden p-1.5 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] rounded-md hover:bg-[var(--color-surface-muted)] transition-colors"
