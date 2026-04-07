@@ -4,12 +4,6 @@
   "outputDirectory": ".",
   "framework": null,
   "installCommand": "",
-  "functions": {
-    "api/**/*.ts": {
-      "runtime": "@vercel/node@4"
-    }
-  },
-  "rewrites": [],
   "headers": [
     {
       "source": "/api/(.*)",
