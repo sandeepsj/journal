@@ -1,32 +1,59 @@
 import {
   getOrCreateAppFolder,
-  listFiles,
-  readFile,
-  createFile,
-  updateFile,
+  createFolder,
+  listFolders,
+  findFileInFolder,
+  readJsonFile,
+  readTextFile,
+  readFileAsDataUrl,
+  createJsonFile,
+  createTextFile,
+  createBinaryFile,
+  updateJsonFile,
+  updateTextFile,
+  updateBinaryFile,
   deleteFile,
 } from './client'
 import type { Mood } from '@/types/journal'
 
-/** Shape of a journal entry stored in Google Drive */
-export interface DriveJournalEntry {
+// ── File names inside each entry folder ───────────────────────
+const CONTENT_FILE = 'content.md'
+const DRAWING_FILE = 'drawing.png'
+const METADATA_FILE = 'metadata.json'
+
+// ── Types ─────────────────────────────────────────────────────
+
+/** Metadata stored in metadata.json inside each entry folder */
+export interface EntryMetadata {
   id: string
-  title: string
-  body: string
-  bodyPlainText: string
   mood: Mood | null
   wordCount: number
   textColor: string
-  drawing: string | null
+  pinned: boolean
+  createdAt: string
+  updatedAt: string
+  hasDrawing: boolean
+  embedding?: number[]
+}
+
+/** Full entry as returned to the app */
+export interface DriveJournalEntry {
+  id: string           // Drive folder ID
+  title: string
+  body: string
+  mood: Mood | null
+  wordCount: number
+  textColor: string
+  drawing: string | null  // data URL
   pinned: boolean
   createdAt: string
   updatedAt: string
   embedding?: number[]
 }
 
-/** Lightweight list item derived from Drive file metadata + appProperties */
+/** Lightweight list item from folder appProperties */
 export interface DriveEntryListItem {
-  id: string            // Drive file ID
+  id: string
   title: string
   mood: Mood | null
   wordCount: number
@@ -36,7 +63,8 @@ export interface DriveEntryListItem {
   pinned: boolean
 }
 
-// Cache the folder ID for the session
+// ── Folder cache ──────────────────────────────────────────────
+
 let cachedFolderId: string | null = null
 
 async function getFolderId(token: string): Promise<string> {
@@ -46,41 +74,56 @@ async function getFolderId(token: string): Promise<string> {
   return cachedFolderId
 }
 
-/** Reset cached folder ID (e.g., on sign out) */
 export function resetFolderCache() {
   cachedFolderId = null
 }
+
+// ── Helpers ───────────────────────────────────────────────────
 
 function generateId(): string {
   return crypto.randomUUID()
 }
 
-function stripHtml(html: string): string {
-  // Simple strip for plain text extraction
-  return html.replace(/<[^>]*>/g, '').trim()
+function countWords(text: string): number {
+  if (!text.trim()) return 0
+  return text.trim().split(/\s+/).filter(Boolean).length
 }
 
 function makeExcerpt(body: string, maxLen = 120): string {
-  const plain = stripHtml(body)
-  return plain.length > maxLen ? plain.slice(0, maxLen) + '...' : plain
+  return body.length > maxLen ? body.slice(0, maxLen) + '...' : body
 }
 
-function countWords(text: string): number {
-  const plain = stripHtml(text)
-  if (!plain) return 0
-  return plain.split(/\s+/).filter(Boolean).length
+/** Convert title + body into markdown content */
+function toMarkdown(title: string, body: string): string {
+  const heading = title.trim() ? `# ${title.trim()}\n\n` : ''
+  return `${heading}${body}`
 }
+
+/** Parse markdown content back into title + body */
+function fromMarkdown(content: string): { title: string; body: string } {
+  const lines = content.split('\n')
+  if (lines[0]?.startsWith('# ')) {
+    const title = lines[0].slice(2).trim()
+    // Skip the blank line after the heading
+    const bodyStart = lines[1]?.trim() === '' ? 2 : 1
+    const body = lines.slice(bodyStart).join('\n')
+    return { title, body }
+  }
+  return { title: '', body: content }
+}
+
+// ── CRUD ──────────────────────────────────────────────────────
 
 /**
  * List journal entries from Drive.
- * Uses appProperties for metadata to avoid downloading full file content.
+ * Uses appProperties on entry folders for metadata — no file downloads needed.
  */
 export async function listEntries(
   token: string,
   options?: { search?: string; pageSize?: number; pageToken?: string }
 ): Promise<{ entries: DriveEntryListItem[]; nextPageToken?: string }> {
   const folderId = await getFolderId(token)
-  const { files, nextPageToken } = await listFiles(
+  const { files, nextPageToken } = await listFolders(
     token,
     folderId,
     options?.pageSize ?? 50,
@@ -89,7 +132,7 @@ export async function listEntries(
 
   const entries: DriveEntryListItem[] = files.map((f) => ({
     id: f.id,
-    title: f.appProperties?.title || 'Untitled',
+    title: f.appProperties?.title || f.name || 'Untitled',
     mood: (f.appProperties?.mood as Mood) || null,
     wordCount: parseInt(f.appProperties?.wordCount || '0', 10),
     excerpt: f.appProperties?.excerpt || '',
@@ -114,15 +157,52 @@ export async function listEntries(
   return { entries, nextPageToken }
 }
 
-/** Get a full journal entry by Drive file ID */
+/** Get a full journal entry by Drive folder ID */
 export async function getEntry(
   token: string,
-  fileId: string
+  folderId: string
 ): Promise<DriveJournalEntry> {
-  return readFile<DriveJournalEntry>(token, fileId)
+  // Find files inside the entry folder
+  const contentFileId = await findFileInFolder(token, folderId, CONTENT_FILE)
+  const metadataFileId = await findFileInFolder(token, folderId, METADATA_FILE)
+
+  if (!contentFileId || !metadataFileId) {
+    throw new Error('Entry is missing content or metadata files')
+  }
+
+  // Read content and metadata in parallel
+  const [markdownContent, metadata] = await Promise.all([
+    readTextFile(token, contentFileId),
+    readJsonFile<EntryMetadata>(token, metadataFileId),
+  ])
+
+  const { title, body } = fromMarkdown(markdownContent)
+
+  // Read drawing if it exists
+  let drawing: string | null = null
+  if (metadata.hasDrawing) {
+    const drawingFileId = await findFileInFolder(token, folderId, DRAWING_FILE)
+    if (drawingFileId) {
+      drawing = await readFileAsDataUrl(token, drawingFileId, 'image/png')
+    }
+  }
+
+  return {
+    id: folderId,
+    title,
+    body,
+    mood: metadata.mood,
+    wordCount: metadata.wordCount,
+    textColor: metadata.textColor,
+    drawing,
+    pinned: metadata.pinned,
+    createdAt: metadata.createdAt,
+    updatedAt: metadata.updatedAt,
+    embedding: metadata.embedding,
+  }
 }
 
-/** Create a new journal entry. Returns the Drive file ID. */
+/** Create a new journal entry. Returns the Drive folder ID. */
 export async function createEntry(
   token: string,
   data: {
@@ -133,48 +213,85 @@ export async function createEntry(
     drawing?: string | null
   }
 ): Promise<{ id: string; entry: DriveJournalEntry }> {
-  const folderId = await getFolderId(token)
+  const rootFolderId = await getFolderId(token)
   const now = new Date().toISOString()
   const entryId = generateId()
+  const folderName = data.title.trim()
+    ? `${data.title.trim().slice(0, 60)}`
+    : `Entry ${new Date().toLocaleDateString()}`
 
-  const entry: DriveJournalEntry = {
+  // 1. Create entry folder with appProperties for listing
+  const appProperties = {
+    title: (data.title || 'Untitled').slice(0, 124),
+    mood: data.mood ?? '',
+    wordCount: String(countWords(data.body)),
+    excerpt: makeExcerpt(data.body).slice(0, 124),
+    createdAt: now,
+    pinned: 'false',
+  }
+
+  // Create folder via Drive API with appProperties
+  const folderRes = await fetch('https://www.googleapis.com/drive/v3/files', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      name: folderName,
+      mimeType: 'application/vnd.google-apps.folder',
+      parents: [rootFolderId],
+      appProperties,
+    }),
+  })
+  if (!folderRes.ok) throw new Error('Failed to create entry folder')
+  const folderData = await folderRes.json()
+  const folderId = folderData.id
+
+  // 2. Create files inside the folder (in parallel)
+  const metadata: EntryMetadata = {
     id: entryId,
-    title: data.title,
-    body: data.body,
-    bodyPlainText: stripHtml(data.body),
     mood: data.mood,
     wordCount: countWords(data.body),
     textColor: data.textColor ?? '#2C2825',
+    pinned: false,
+    createdAt: now,
+    updatedAt: now,
+    hasDrawing: !!data.drawing,
+  }
+
+  const markdown = toMarkdown(data.title, data.body)
+  const fileOps: Promise<unknown>[] = [
+    createTextFile(token, folderId, CONTENT_FILE, markdown),
+    createJsonFile(token, folderId, METADATA_FILE, metadata),
+  ]
+
+  if (data.drawing) {
+    fileOps.push(createBinaryFile(token, folderId, DRAWING_FILE, data.drawing, 'image/png'))
+  }
+
+  await Promise.all(fileOps)
+
+  const entry: DriveJournalEntry = {
+    id: folderId,
+    title: data.title,
+    body: data.body,
+    mood: data.mood,
+    wordCount: metadata.wordCount,
+    textColor: metadata.textColor,
     drawing: data.drawing ?? null,
     pinned: false,
     createdAt: now,
     updatedAt: now,
   }
 
-  const appProperties = {
-    title: entry.title.slice(0, 124), // Drive limit: 124 bytes per value
-    mood: entry.mood ?? '',
-    wordCount: String(entry.wordCount),
-    excerpt: makeExcerpt(entry.body).slice(0, 124),
-    createdAt: now,
-    pinned: 'false',
-  }
-
-  const fileId = await createFile(
-    token,
-    folderId,
-    `${entryId}.json`,
-    entry,
-    appProperties
-  )
-
-  return { id: fileId, entry }
+  return { id: folderId, entry }
 }
 
 /** Update an existing journal entry */
 export async function updateEntry(
   token: string,
-  fileId: string,
+  folderId: string,
   data: {
     title: string
     body: string
@@ -183,63 +300,123 @@ export async function updateEntry(
     drawing?: string | null
   }
 ): Promise<DriveJournalEntry> {
-  // Read existing to preserve fields like createdAt, pinned, embedding
-  const existing = await readFile<DriveJournalEntry>(token, fileId)
+  // Find existing files
+  const [contentFileId, metadataFileId, drawingFileId] = await Promise.all([
+    findFileInFolder(token, folderId, CONTENT_FILE),
+    findFileInFolder(token, folderId, METADATA_FILE),
+    findFileInFolder(token, folderId, DRAWING_FILE),
+  ])
 
-  const updated: DriveJournalEntry = {
+  if (!contentFileId || !metadataFileId) {
+    throw new Error('Entry is missing content or metadata files')
+  }
+
+  // Read existing metadata to preserve fields
+  const existing = await readJsonFile<EntryMetadata>(token, metadataFileId)
+  const now = new Date().toISOString()
+
+  const updatedMetadata: EntryMetadata = {
     ...existing,
-    title: data.title,
-    body: data.body,
-    bodyPlainText: stripHtml(data.body),
     mood: data.mood,
     wordCount: countWords(data.body),
     textColor: data.textColor ?? existing.textColor,
-    drawing: data.drawing ?? null,
-    updatedAt: new Date().toISOString(),
+    updatedAt: now,
+    hasDrawing: !!data.drawing,
   }
 
+  // Update appProperties on the folder for listing
   const appProperties = {
-    title: updated.title.slice(0, 124),
-    mood: updated.mood ?? '',
-    wordCount: String(updated.wordCount),
-    excerpt: makeExcerpt(updated.body).slice(0, 124),
-    createdAt: updated.createdAt,
-    pinned: String(updated.pinned),
+    title: (data.title || 'Untitled').slice(0, 124),
+    mood: data.mood ?? '',
+    wordCount: String(updatedMetadata.wordCount),
+    excerpt: makeExcerpt(data.body).slice(0, 124),
+    createdAt: existing.createdAt,
+    pinned: String(existing.pinned),
   }
 
-  await updateFile(token, fileId, updated, appProperties)
+  // Update folder name + appProperties
+  await fetch(`https://www.googleapis.com/drive/v3/files/${folderId}`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      name: data.title.trim() ? data.title.trim().slice(0, 60) : `Entry ${new Date().toLocaleDateString()}`,
+      appProperties,
+    }),
+  })
 
-  return updated
+  // Update files in parallel
+  const markdown = toMarkdown(data.title, data.body)
+  const fileOps: Promise<unknown>[] = [
+    updateTextFile(token, contentFileId, markdown),
+    updateJsonFile(token, metadataFileId, updatedMetadata),
+  ]
+
+  // Handle drawing: create, update, or delete
+  if (data.drawing && drawingFileId) {
+    fileOps.push(updateBinaryFile(token, drawingFileId, data.drawing, 'image/png'))
+  } else if (data.drawing && !drawingFileId) {
+    fileOps.push(createBinaryFile(token, folderId, DRAWING_FILE, data.drawing, 'image/png'))
+  } else if (!data.drawing && drawingFileId) {
+    fileOps.push(deleteFile(token, drawingFileId))
+  }
+
+  await Promise.all(fileOps)
+
+  return {
+    id: folderId,
+    title: data.title,
+    body: data.body,
+    mood: data.mood,
+    wordCount: updatedMetadata.wordCount,
+    textColor: updatedMetadata.textColor,
+    drawing: data.drawing ?? null,
+    pinned: existing.pinned,
+    createdAt: existing.createdAt,
+    updatedAt: now,
+    embedding: existing.embedding,
+  }
 }
 
 /** Toggle pin status on an entry */
 export async function togglePin(
   token: string,
-  fileId: string,
+  folderId: string,
   pinned: boolean
 ): Promise<void> {
-  const existing = await readFile<DriveJournalEntry>(token, fileId)
+  const metadataFileId = await findFileInFolder(token, folderId, METADATA_FILE)
+  if (!metadataFileId) throw new Error('Metadata file not found')
+
+  const existing = await readJsonFile<EntryMetadata>(token, metadataFileId)
   const updated = { ...existing, pinned, updatedAt: new Date().toISOString() }
 
-  await updateFile(token, fileId, updated, {
-    title: updated.title.slice(0, 124),
-    mood: updated.mood ?? '',
-    wordCount: String(updated.wordCount),
-    excerpt: makeExcerpt(updated.body).slice(0, 124),
-    createdAt: updated.createdAt,
-    pinned: String(pinned),
+  // Update metadata file
+  await updateJsonFile(token, metadataFileId, updated)
+
+  // Update folder appProperties
+  await fetch(`https://www.googleapis.com/drive/v3/files/${folderId}`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      appProperties: { pinned: String(pinned) },
+    }),
   })
 }
 
-/** Delete a journal entry */
+/** Delete a journal entry (deletes the entire folder) */
 export async function deleteEntry(
   token: string,
-  fileId: string
+  folderId: string
 ): Promise<void> {
-  await deleteFile(token, fileId)
+  await deleteFile(token, folderId)
 }
 
-/** Get all pinned entries (list items) */
+/** Get all pinned entries */
 export async function listPinnedEntries(
   token: string
 ): Promise<DriveEntryListItem[]> {
@@ -251,25 +428,36 @@ export async function listPinnedEntries(
 export async function loadAllEmbeddings(
   token: string
 ): Promise<Array<{ fileId: string; title: string; body: string; embedding: number[] }>> {
-  const folderId = await getFolderId(token)
+  const rootFolderId = await getFolderId(token)
   const results: Array<{ fileId: string; title: string; body: string; embedding: number[] }> = []
   let pageToken: string | undefined
 
-  // Paginate through all files
   do {
-    const { files, nextPageToken } = await listFiles(token, folderId, 100, pageToken)
-    // Read each file to get embedding — batch with Promise.all for speed
+    const { files: folders, nextPageToken } = await listFolders(token, rootFolderId, 100, pageToken)
+
     const entries = await Promise.all(
-      files.map(async (f) => {
+      folders.map(async (folder) => {
         try {
-          const entry = await readFile<DriveJournalEntry>(token, f.id)
-          if (entry.embedding && entry.embedding.length > 0) {
-            return { fileId: f.id, title: entry.title, body: entry.body, embedding: entry.embedding }
+          const [contentFileId, metadataFileId] = await Promise.all([
+            findFileInFolder(token, folder.id, CONTENT_FILE),
+            findFileInFolder(token, folder.id, METADATA_FILE),
+          ])
+          if (!contentFileId || !metadataFileId) return null
+
+          const [markdown, metadata] = await Promise.all([
+            readTextFile(token, contentFileId),
+            readJsonFile<EntryMetadata>(token, metadataFileId),
+          ])
+
+          if (metadata.embedding && metadata.embedding.length > 0) {
+            const { title, body } = fromMarkdown(markdown)
+            return { fileId: folder.id, title, body, embedding: metadata.embedding }
           }
-        } catch { /* skip unreadable files */ }
+        } catch { /* skip unreadable entries */ }
         return null
       })
     )
+
     results.push(...entries.filter((e): e is NonNullable<typeof e> => e !== null))
     pageToken = nextPageToken
   } while (pageToken)

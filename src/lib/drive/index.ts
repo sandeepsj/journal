@@ -1,4 +1,4 @@
-export { DriveApiError, getOrCreateAppFolder } from './client'
+export { DriveApiError, getOrCreateAppFolder, readJsonFile, updateJsonFile, findFileInFolder } from './client'
 export {
   listEntries,
   getEntry,
@@ -11,4 +11,5 @@ export {
   resetFolderCache,
   type DriveJournalEntry,
   type DriveEntryListItem,
+  type EntryMetadata,
 } from './entries'

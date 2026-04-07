@@ -1,17 +1,17 @@
-import { readFile, updateFile } from '@/lib/drive/client'
-import type { DriveJournalEntry } from '@/lib/drive/entries'
+import { findFileInFolder, readJsonFile, updateJsonFile } from '@/lib/drive/client'
+import type { EntryMetadata } from '@/lib/drive/entries'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || ''
 
 /**
  * Call the Vercel proxy to generate an embedding, then update the
- * Drive file with the embedding field.
+ * metadata.json file inside the entry folder with the embedding.
  *
  * Designed to be called fire-and-forget after save.
  */
 export async function generateAndStoreEmbedding(
   accessToken: string,
-  fileId: string,
+  folderId: string,
   text: string
 ): Promise<void> {
   if (!API_BASE || !text.trim()) return
@@ -33,16 +33,12 @@ export async function generateAndStoreEmbedding(
   const { embedding } = await embedRes.json()
   if (!embedding || !Array.isArray(embedding)) return
 
-  // 2. Read current file, add embedding, write back
-  const entry = await readFile<DriveJournalEntry>(accessToken, fileId)
-  const updated = { ...entry, embedding }
+  // 2. Find and update metadata.json with the embedding
+  const metadataFileId = await findFileInFolder(accessToken, folderId, 'metadata.json')
+  if (!metadataFileId) return
 
-  await updateFile(accessToken, fileId, updated, {
-    title: entry.title.slice(0, 124),
-    mood: entry.mood ?? '',
-    wordCount: String(entry.wordCount),
-    excerpt: (entry.bodyPlainText || '').slice(0, 124),
-    createdAt: entry.createdAt,
-    pinned: String(entry.pinned),
-  })
+  const metadata = await readJsonFile<EntryMetadata>(accessToken, metadataFileId)
+  const updated = { ...metadata, embedding }
+
+  await updateJsonFile(accessToken, metadataFileId, updated)
 }
