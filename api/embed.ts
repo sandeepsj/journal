@@ -21,25 +21,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const openaiRes = await fetch('https://api.openai.com/v1/embeddings', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'text-embedding-3-small',
-        input: text,
-      }),
-    })
+    const geminiRes = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=${process.env.GEMINI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'models/text-embedding-004',
+          content: { parts: [{ text }] },
+        }),
+      }
+    )
 
-    if (!openaiRes.ok) {
-      const err = await openaiRes.text()
-      return res.status(502).json({ error: 'OpenAI API error', detail: err })
+    if (!geminiRes.ok) {
+      const err = await geminiRes.text()
+      return res.status(502).json({ error: 'Gemini API error', detail: err })
     }
 
-    const data = await openaiRes.json()
-    return res.status(200).json({ embedding: data.data[0].embedding })
+    const data = await geminiRes.json()
+    return res.status(200).json({ embedding: data.embedding.values })
   } catch (err) {
     return res.status(500).json({ error: 'Embedding generation failed' })
   }
