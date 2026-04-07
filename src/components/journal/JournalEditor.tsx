@@ -6,6 +6,8 @@ import { WordCount } from './WordCount'
 import { AutoSaveStatus } from './AutoSaveStatus'
 import { DrawingCanvas } from './DrawingCanvas'
 import { DrawingToolbar } from './DrawingToolbar'
+import { RichTextEditor, type RichTextEditorHandle } from './RichTextEditor'
+import { FormattingToolbar } from './FormattingToolbar'
 import { useAutoSave } from '@/hooks/useAutoSave'
 import { useWordCount } from '@/hooks/useWordCount'
 import { useEntrySync, type FreshEntryData } from '@/hooks/useEntrySync'
@@ -41,6 +43,7 @@ export function JournalEditor({
   const [isPinned, setIsPinned] = useState(initialPinned)
   const [title, setTitle] = useState(initialTitle)
   const [body, setBody] = useState(initialBody)
+  const [bodyPlainText, setBodyPlainText] = useState('')
   const [mood, setMood] = useState<Mood | null>(initialMood)
   const [mode, setMode] = useState<'write' | 'draw'>('write')
   const [textColor, setTextColor] = useState(initialTextColor)
@@ -54,46 +57,40 @@ export function JournalEditor({
   const [canUndoText, setCanUndoText] = useState(false)
   const [canRedoText, setCanRedoText] = useState(false)
 
-  const bodyRef = useRef<HTMLTextAreaElement>(null)
+  const editorRef = useRef<RichTextEditorHandle>(null)
+  const editorWrapperRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const savedEntryIdRef = useRef<string | null>(entryId ?? null)
   const drawingHistoryRef = useRef<string[]>([])
   const drawingFutureRef = useRef<string[]>([])
-  const textHistoryRef = useRef<Array<{ title: string; body: string }>>([])
-  const textFutureRef = useRef<Array<{ title: string; body: string }>>([])
-  const textCurrentRef = useRef({ title: initialTitle, body: initialBody })
-  const textLastCommitRef = useRef({ title: initialTitle, body: initialBody })
-  const textDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // Plain text ref for embedding generation (avoids stale closure in handleSave)
+  const bodyPlainTextRef = useRef('')
 
-  const wordCount = useWordCount(body)
-  const { emotion: eemoEmotion, message: eemoMessage, isLoading: eemoLoading } = useEemo(title, body)
+  const wordCount = useWordCount(bodyPlainText)
+  const { emotion: eemoEmotion, message: eemoMessage, isLoading: eemoLoading } = useEemo(title, bodyPlainText)
 
-  function insertAtCursor(text: string) {
-    const el = bodyRef.current
-    if (!el) return
-    const start = el.selectionStart ?? el.value.length
-    const end = el.selectionEnd ?? el.value.length
-    const next = el.value.slice(0, start) + text + el.value.slice(end)
-    setBody(next)
-    textCurrentRef.current = { ...textCurrentRef.current, body: next }
-    scheduleTextHistoryPush()
-    // Restore cursor after the inserted text
-    requestAnimationFrame(() => {
-      el.selectionStart = el.selectionEnd = start + text.length
-      el.focus()
-    })
+  function handleEditorUpdate(html: string) {
+    setBody(html)
+    const text = editorRef.current?.getText() ?? ''
+    setBodyPlainText(text)
+    bodyPlainTextRef.current = text
   }
 
-  // Auto-resize textarea — must stay in sync with ruled lines
+  function handleEditorTransaction() {
+    setCanUndoText(editorRef.current?.canUndo() ?? false)
+    setCanRedoText(editorRef.current?.canRedo() ?? false)
+  }
+
+  // Sync editorWrapperRef from the RichTextEditor handle
   useEffect(() => {
-    const el = bodyRef.current
-    if (!el) return
-    el.style.height = 'auto'
-    el.style.height = `${el.scrollHeight}px`
-  }, [body])
+    if (editorRef.current?.wrapperElement) {
+      (editorWrapperRef as React.MutableRefObject<HTMLDivElement | null>).current =
+        editorRef.current.wrapperElement
+    }
+  })
 
   useEffect(() => {
-    if (!entryId) bodyRef.current?.focus()
+    if (!entryId) editorRef.current?.focus()
   }, [entryId])
 
   function pushToHistory(current: string | null) {
@@ -110,7 +107,7 @@ export function JournalEditor({
     setDrawingData(dataUrl)
   }
 
-  function handleUndo() {
+  function handleDrawingUndo() {
     if (drawingHistoryRef.current.length === 0) return
     const prev = drawingHistoryRef.current[drawingHistoryRef.current.length - 1]
     drawingHistoryRef.current = drawingHistoryRef.current.slice(0, -1)
@@ -122,7 +119,7 @@ export function JournalEditor({
     setCanRedo(true)
   }
 
-  function handleRedo() {
+  function handleDrawingRedo() {
     if (drawingFutureRef.current.length === 0) return
     const next = drawingFutureRef.current[0]
     drawingFutureRef.current = drawingFutureRef.current.slice(1)
@@ -139,48 +136,12 @@ export function JournalEditor({
     setDrawingData(null)
   }
 
-  function commitTextHistory() {
-    const prev = textLastCommitRef.current
-    const curr = textCurrentRef.current
-    if (prev.title === curr.title && prev.body === curr.body) return
-    textHistoryRef.current = [...textHistoryRef.current.slice(-29), prev]
-    textFutureRef.current = []
-    textLastCommitRef.current = { ...curr }
-    setCanUndoText(textHistoryRef.current.length > 0)
-    setCanRedoText(false)
-  }
-
-  function scheduleTextHistoryPush() {
-    if (textDebounceRef.current) clearTimeout(textDebounceRef.current)
-    textDebounceRef.current = setTimeout(commitTextHistory, 500)
-  }
-
   function handleTextUndo() {
-    if (textDebounceRef.current) { clearTimeout(textDebounceRef.current); textDebounceRef.current = null }
-    commitTextHistory()
-    if (textHistoryRef.current.length === 0) return
-    const prev = textHistoryRef.current[textHistoryRef.current.length - 1]
-    textHistoryRef.current = textHistoryRef.current.slice(0, -1)
-    textFutureRef.current = [{ ...textLastCommitRef.current }, ...textFutureRef.current]
-    setTitle(prev.title)
-    setBody(prev.body)
-    textCurrentRef.current = { ...prev }
-    textLastCommitRef.current = { ...prev }
-    setCanUndoText(textHistoryRef.current.length > 0)
-    setCanRedoText(true)
+    editorRef.current?.undo()
   }
 
   function handleTextRedo() {
-    if (textFutureRef.current.length === 0) return
-    const next = textFutureRef.current[0]
-    textFutureRef.current = textFutureRef.current.slice(1)
-    textHistoryRef.current = [...textHistoryRef.current, { ...textLastCommitRef.current }]
-    setTitle(next.title)
-    setBody(next.body)
-    textCurrentRef.current = { ...next }
-    textLastCommitRef.current = { ...next }
-    setCanUndoText(true)
-    setCanRedoText(textFutureRef.current.length > 0)
+    editorRef.current?.redo()
   }
 
   const handleReload = useCallback((data: FreshEntryData) => {
@@ -189,17 +150,11 @@ export function JournalEditor({
     setMood(data.mood as Mood | null)
     setTextColor(data.textColor)
     setDrawingData(data.drawing)
-    // Reset all history so stale undo steps can't be replayed
-    textHistoryRef.current = []
-    textFutureRef.current = []
-    textCurrentRef.current = { title: data.title, body: data.body }
-    textLastCommitRef.current = { title: data.title, body: data.body }
     drawingHistoryRef.current = []
     drawingFutureRef.current = []
-    setCanUndoText(false)
-    setCanRedoText(false)
     setCanUndo(false)
     setCanRedo(false)
+    // TipTap undo/redo state will reset via content prop sync
   }, [])
 
   // Ref so handleSave can call notifySaved without a closure dep
@@ -221,10 +176,10 @@ export function JournalEditor({
       }
       notifySavedRef.current()
 
-      // Generate embedding in the background (don't block save UX)
+      // Generate embedding from plain text (not HTML)
       const fileId = savedEntryIdRef.current
       if (fileId) {
-        const text = `${data.title}\n\n${data.body}`.trim()
+        const text = `${data.title}\n\n${bodyPlainTextRef.current}`.trim()
         generateAndStoreEmbedding(accessToken, fileId, text).catch((err) =>
           console.error('[JournalEditor] embedding error:', err)
         )
@@ -234,7 +189,7 @@ export function JournalEditor({
   )
 
   // autoSaveEnabled state lets us pass !isStale to useAutoSave without a circular dep:
-  // useAutoSave → isDirty → useEntrySync → isStale → useAutoSave(enabled)
+  // useAutoSave -> isDirty -> useEntrySync -> isStale -> useAutoSave(enabled)
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(true)
 
   const { status, save, isDirty } = useAutoSave({
@@ -270,23 +225,19 @@ export function JournalEditor({
       e.preventDefault()
       save()
     }
+    // Drawing undo/redo — TipTap handles its own Cmd+Z in write mode
     if (mode === 'draw' && (e.metaKey || e.ctrlKey) && e.key === 'z') {
       e.preventDefault()
-      if (e.shiftKey) handleRedo()
-      else handleUndo()
-    }
-    if (mode === 'write' && (e.metaKey || e.ctrlKey) && e.key === 'z') {
-      e.preventDefault()
-      if (e.shiftKey) handleTextRedo()
-      else handleTextUndo()
+      if (e.shiftKey) handleDrawingRedo()
+      else handleDrawingUndo()
     }
   }
 
-  const isEmpty = !title.trim() && !body.trim()
+  const isEmpty = !title.trim() && !bodyPlainText.trim()
 
   return (
     <div className="min-h-screen flex flex-col" onKeyDown={handleKeyDown}>
-      {/* ── Top bar ─────────────────────────────────────── */}
+      {/* -- Top bar ------------------------------------------------- */}
       <header className="flex items-center justify-between px-6 py-3 border-b border-[var(--color-border)]/60 bg-[var(--color-bg)]/80 backdrop-blur-md shadow-[var(--shadow-xs)] sticky top-0 z-20">
         <div className="flex items-center gap-2">
           <button
@@ -341,13 +292,13 @@ export function JournalEditor({
         </div>
       </header>
 
-      {/* ── Paper container ──────────────────────────────── */}
+      {/* -- Paper container ------------------------------------------ */}
       <div className="flex-1 flex justify-center px-4 py-8 animate-page-enter">
         <div
           className="ruled-paper w-full max-w-4xl rounded-sm shadow-md flex flex-col"
           style={{ minHeight: 'calc(100vh - 10rem)' }}
         >
-          {/* Paper header — date + title, above the ruled lines */}
+          {/* Paper header -- date + title, above the ruled lines */}
           <div className="pt-8 pb-4 pr-6 border-b border-[var(--color-paper-line)]" style={{ paddingLeft: 'calc(var(--rule-margin) + 1.25rem)' }}>
             <p className="text-sm text-[var(--color-text-muted)] mb-4 tabular-nums">
               {new Date().toLocaleDateString('en-US', {
@@ -360,12 +311,7 @@ export function JournalEditor({
 
             <input
               value={title}
-              onChange={(e) => {
-                const v = e.target.value
-                setTitle(v)
-                textCurrentRef.current = { ...textCurrentRef.current, title: v }
-                scheduleTextHistoryPush()
-              }}
+              onChange={(e) => setTitle(e.target.value)}
               placeholder="Title"
               maxLength={300}
               className="w-full text-5xl bg-transparent border-none outline-none ring-0 focus:outline-none focus:ring-0 placeholder:text-[var(--color-dot-pattern)] leading-tight caret-[var(--color-accent)]"
@@ -374,7 +320,7 @@ export function JournalEditor({
             />
           </div>
 
-          {/* Stale banner — shown when another tab saved this entry while this tab has unsaved edits */}
+          {/* Stale banner -- shown when another tab saved this entry while this tab has unsaved edits */}
           {isStale && (
             <div className="flex items-center justify-between px-6 py-2 bg-[#FDF6EC] dark:bg-[#2E2210] border-b border-[#F0E0C0] dark:border-[#4A3A1A] text-sm text-[#8B6914] dark:text-[#D4A030]">
               <span>This entry was saved in another tab.</span>
@@ -395,9 +341,7 @@ export function JournalEditor({
             </div>
           )}
 
-          {/* Drawing toolbar — relative + z-10 ensures the color picker dropdown
-              paints above the drawing canvas (z-2). No overflow-x-auto here so
-              the color picker popup is not clipped. */}
+          {/* Drawing toolbar + formatting toolbar */}
           <div className="flex items-center justify-between px-6 py-2 border-b border-[var(--color-paper-line)] relative z-10 gap-3">
             <DrawingToolbar
               mode={mode}
@@ -415,56 +359,51 @@ export function JournalEditor({
               onClearDrawing={handleClearDrawing}
               canUndo={mode === 'draw' ? canUndo : canUndoText}
               canRedo={mode === 'draw' ? canRedo : canRedoText}
-              onUndo={mode === 'draw' ? handleUndo : handleTextUndo}
-              onRedo={mode === 'draw' ? handleRedo : handleTextRedo}
+              onUndo={mode === 'draw' ? handleDrawingUndo : handleTextUndo}
+              onRedo={mode === 'draw' ? handleDrawingRedo : handleTextRedo}
             />
 
-            {/* Quick punctuation — handy for stylus/tablet use */}
+            {/* Rich text formatting + quick punctuation in write mode */}
             {mode === 'write' && (
-              <div className="flex items-center gap-1 flex-shrink-0">
-                {['.', ',', '?', '!'].map((char) => (
-                  <button
-                    key={char}
-                    type="button"
-                    onPointerDown={(e) => {
-                      // prevent textarea blur before we read selectionStart
-                      e.preventDefault()
-                      insertAtCursor(char)
-                    }}
-                    aria-label={`Insert ${char}`}
-                    className="w-8 h-8 rounded-lg text-sm font-mono font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-muted)] border border-[var(--color-border)] transition-colors duration-150 flex items-center justify-center"
-                  >
-                    {char}
-                  </button>
-                ))}
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <FormattingToolbar editorRef={editorRef} />
+                <div className="w-px h-5 bg-[var(--color-border)]" />
+                <div className="flex items-center gap-1">
+                  {['.', ',', '?', '!'].map((char) => (
+                    <button
+                      key={char}
+                      type="button"
+                      onPointerDown={(e) => {
+                        e.preventDefault()
+                        editorRef.current?.insertAtCursor(char)
+                      }}
+                      aria-label={`Insert ${char}`}
+                      className="w-8 h-8 rounded-lg text-sm font-mono font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-muted)] border border-[var(--color-border)] transition-colors duration-150 flex items-center justify-center"
+                    >
+                      {char}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
           </div>
 
-          {/* Ruled writing area + canvas overlay.
-             pb-[75vh] adds extra ruled scroll space so tablet/stylus users
-             can scroll the last lines up to a comfortable writing position. */}
+          {/* Ruled writing area + canvas overlay */}
           <div className="flex-1 px-0 pt-0 pb-[75vh] relative ruled-lines">
-            <textarea
-              ref={bodyRef}
-              value={body}
-              onChange={(e) => {
-                setBody(e.target.value)
-                textCurrentRef.current = { ...textCurrentRef.current, body: e.target.value }
-                scheduleTextHistoryPush()
-              }}
-              placeholder="Start writing..."
-              className="ruled-text w-full bg-transparent border-none outline-none ring-0 focus:outline-none focus:ring-0 resize-none placeholder:text-[var(--color-dot-pattern)] text-[1.35rem] leading-[2.75rem] relative z-[1]"
-              style={{
-                caretColor: 'var(--color-accent)',
-                minHeight: 'calc(var(--rule-h) * 12)',
-                fontFamily: 'var(--font-kalam)',
-                color: textColor,
-                pointerEvents: mode === 'write' ? 'auto' : 'none',
-              }}
-              aria-label="Entry body"
-              spellCheck
-            />
+            <div
+              className="relative z-[1]"
+              style={{ pointerEvents: mode === 'write' ? 'auto' : 'none' }}
+            >
+              <RichTextEditor
+                ref={editorRef}
+                content={body}
+                onUpdate={handleEditorUpdate}
+                onTransaction={handleEditorTransaction}
+                textColor={textColor}
+                editable={mode === 'write'}
+                placeholder="Start writing..."
+              />
+            </div>
             <DrawingCanvas
               active={mode === 'draw'}
               brushColor={brushColor}
@@ -473,20 +412,20 @@ export function JournalEditor({
               erasing={erasing}
               initialData={drawingData ?? undefined}
               canvasRef={canvasRef}
-              sizeRef={bodyRef}
+              sizeRef={editorWrapperRef}
               onChange={handleDrawingChange}
             />
           </div>
         </div>
       </div>
 
-      {/* ── Bottom bar ──────────────────────────────────── */}
+      {/* -- Bottom bar ----------------------------------------------- */}
       <footer className="sticky bottom-0 flex items-center justify-between px-6 py-3 border-t border-[var(--color-border)]/60 bg-[var(--color-bg)]/80 backdrop-blur-md shadow-[var(--shadow-sm)]">
         <MoodSelector value={mood} onChange={setMood} />
         <WordCount count={wordCount} />
       </footer>
 
-      {/* ── Eemo — fixed to viewport top-right, outside the journal paper ── */}
+      {/* -- Eemo -- fixed to viewport top-right, outside the journal paper -- */}
       <EemoWidget emotion={eemoEmotion} message={eemoMessage} isLoading={eemoLoading} />
     </div>
   )

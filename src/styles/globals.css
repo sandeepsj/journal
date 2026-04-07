@@ -280,3 +280,96 @@ body {
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* ── TipTap Rich Text Editor — ruled notebook styling ─────────── */
+
+/* ProseMirror contenteditable inherits ruled-text metrics */
+.rich-text-editor .ProseMirror {
+  line-height: var(--rule-h);
+  padding-left: calc(var(--rule-margin) + 1.25rem);
+  padding-right: 1.5rem;
+  padding-top: 0.9rem;
+  font-family: var(--font-kalam);
+  font-size: 1.35rem;
+  outline: none;
+  min-height: calc(var(--rule-h) * 12);
+  caret-color: var(--color-accent);
+}
+
+/* Placeholder text */
+.rich-text-editor .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: var(--color-dot-pattern);
+  pointer-events: none;
+  height: 0;
+}
+
+/* Paragraph spacing — each <p> sits on a ruled line */
+.rich-text-editor .ProseMirror p {
+  margin: 0;
+  line-height: var(--rule-h);
+}
+
+/* Headings sit on ruled lines with slightly larger text */
+.rich-text-editor .ProseMirror h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: var(--rule-h);
+  margin: 0;
+}
+
+.rich-text-editor .ProseMirror h2 {
+  font-size: 1.6rem;
+  font-weight: 600;
+  line-height: var(--rule-h);
+  margin: 0;
+}
+
+.rich-text-editor .ProseMirror h3 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  line-height: var(--rule-h);
+  margin: 0;
+}
+
+/* Lists — align with ruled lines */
+.rich-text-editor .ProseMirror ul,
+.rich-text-editor .ProseMirror ol {
+  padding-left: 1.5rem;
+  margin: 0;
+}
+
+.rich-text-editor .ProseMirror li {
+  line-height: var(--rule-h);
+}
+
+.rich-text-editor .ProseMirror li p {
+  margin: 0;
+}
+
+/* Bullet list markers */
+.rich-text-editor .ProseMirror ul li::marker {
+  color: var(--color-text-muted);
+}
+
+/* Blockquote */
+.rich-text-editor .ProseMirror blockquote {
+  border-left: 3px solid var(--color-paper-line);
+  padding-left: 1rem;
+  margin: 0;
+}
+
+/* Inline code */
+.rich-text-editor .ProseMirror code {
+  background: var(--color-surface-muted);
+  border-radius: 0.25rem;
+  padding: 0.1rem 0.3rem;
+  font-size: 0.9em;
+}
+
+/* Focus ring suppression — matches existing ruled-paper input styling */
+.rich-text-editor .ProseMirror:focus-visible {
+  outline: none;
+  box-shadow: none;
+}

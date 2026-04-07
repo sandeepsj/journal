@@ -9,9 +9,9 @@ export interface DrawingCanvasProps {
   erasing?: boolean
   initialData?: string
   canvasRef: RefObject<HTMLCanvasElement | null>
-  /** Observe this element's scrollHeight for canvas height (use textarea ref so
-   *  canvas grows with content instead of being clamped by the flex-1 parent) */
-  sizeRef?: RefObject<HTMLTextAreaElement | null>
+  /** Observe this element's scrollHeight for canvas height (use editor wrapper ref
+   *  so canvas grows with content instead of being clamped by the flex-1 parent) */
+  sizeRef?: RefObject<HTMLElement | null>
   onChange: (dataUrl: string) => void
 }
 

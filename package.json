@@ -18,6 +18,10 @@
     "build-storybook": "storybook build"
   },
   "dependencies": {
+    "@tiptap/extension-placeholder": "^3.22.2",
+    "@tiptap/pm": "^3.22.2",
+    "@tiptap/react": "^3.22.2",
+    "@tiptap/starter-kit": "^3.22.2",
     "@vercel/node": "^5.7.0",
     "framer-motion": "^12.35.2",
     "react": "19.2.3",
