@@ -12,8 +12,6 @@
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "typecheck": "tsc --noEmit",
-    "migrate": "tsx scripts/migrate.ts",
-    "regenerate-embeddings": "tsx scripts/regenerate-embeddings.ts",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },
@@ -22,7 +20,6 @@
     "@tiptap/pm": "^3.22.2",
     "@tiptap/react": "^3.22.2",
     "@tiptap/starter-kit": "^3.22.2",
-    "@vercel/node": "^5.7.0",
     "framer-motion": "^12.35.2",
     "react": "19.2.3",
     "react-dom": "19.2.3",
@@ -52,11 +49,9 @@
     "eslint": "^9",
     "eslint-plugin-storybook": "^10.2.17",
     "jsdom": "^28.1.0",
-    "mongodb": "^7.1.1",
     "playwright": "^1.58.2",
     "storybook": "^10.2.17",
     "tailwindcss": "^4",
-    "tsx": "^4.21.0",
     "typescript": "^5",
     "vite": "^7.0.0",
     "vitest": "^4.1.0"
