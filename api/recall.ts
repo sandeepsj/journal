@@ -36,7 +36,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         'content-type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-5-20241022',
+        model: 'claude-sonnet-4-6',
         max_tokens: 1024,
         system: `You are a thoughtful journal companion. The user is asking a question about their past journal entries. Answer warmly and personally, referencing specific entries when relevant. If the context doesn't contain relevant information, say so honestly.`,
         messages: [

@@ -33,6 +33,9 @@ function formatDate(date: Date, format: DateFormat): string {
 
 export function DateStamp({ date, format = 'short' }: DateStampProps) {
   const d = typeof date === 'string' ? new Date(date) : date
+  if (isNaN(d.getTime())) {
+    return <time className="text-xs text-[var(--color-text-muted)] tabular-nums">—</time>
+  }
   const formatted = formatDate(d, format)
   const iso = d.toISOString()
 
