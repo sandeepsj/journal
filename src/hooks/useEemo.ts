@@ -1,8 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import { llmProxy } from '@/lib/llm-proxy'
 import type { Emotion } from 'react-emotion-face'
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL || ''
 
 export interface EemoState {
   emotion: Emotion | null
@@ -28,7 +27,7 @@ export function useEemo(title: string, body: string): EemoState {
       debounceRef.current = null
     }
 
-    if (content.length < 20 || !accessToken || !API_BASE) return
+    if (content.length < 20 || !accessToken) return
 
     // Skip if content hasn't changed meaningfully since last API call
     const last = lastSentContentRef.current
@@ -45,28 +44,46 @@ export function useEemo(title: string, body: string): EemoState {
       setIsLoading(true)
 
       try {
-        const res = await fetch(`${API_BASE}/api/eemo`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify({ content }),
-          signal: controller.signal,
-        })
+        const res = await llmProxy(
+          'anthropic',
+          'messages',
+          {
+            model: 'claude-haiku-4-5-20251001',
+            max_tokens: 200,
+            messages: [
+              {
+                role: 'user',
+                content: `You are Eemo, a gentle emotional presence. Read this journal entry and respond with JSON only — no other text.
 
-        if (!res.ok) return
+Journal entry:
+"""
+${content}
+"""
+
+Respond with exactly this JSON format:
+{"emotion": "<one of: happy, sad, calm, anxious, grateful, angry, surprised, disgusted, fearful>", "message": "<a warm, brief 1-sentence reflection>"}`,
+              },
+            ],
+          },
+          accessToken
+        )
 
         const data = await res.json()
+        const text = data.content?.[0]?.text || '{}'
 
-        if (data.emotion) {
-          lastSentContentRef.current = content
-          setEmotion(data.emotion as Emotion)
-          setMessage(data.message ?? null)
+        try {
+          const parsed = JSON.parse(text)
+          if (parsed.emotion) {
+            lastSentContentRef.current = content
+            setEmotion(parsed.emotion as Emotion)
+            setMessage(parsed.message ?? null)
+          }
+        } catch {
+          // ignore malformed JSON
         }
       } catch (err) {
         if (err instanceof Error && err.name === 'AbortError') return
-        console.error('[useEemo] fetch error:', err)
+        console.error('[useEemo] error:', err)
       } finally {
         setIsLoading(false)
       }

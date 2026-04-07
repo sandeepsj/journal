@@ -1,24 +1,21 @@
 /**
  * Regenerate embeddings for all journal entries in Google Drive.
  *
- * Reads each entry's content.md, calls the Vercel embed proxy,
+ * Reads each entry's content.md, calls the centralized LLM proxy,
  * and stores the embedding in metadata.json.
  *
  * Usage:
  *   GOOGLE_ACCESS_TOKEN="ya29...." \
- *   API_BASE_URL="https://your-app.vercel.app" \
  *   npx tsx scripts/regenerate-embeddings.ts
  */
 
 const GOOGLE_ACCESS_TOKEN = process.env.GOOGLE_ACCESS_TOKEN
-const API_BASE_URL = process.env.API_BASE_URL
+const PROXY_URL = 'https://llm-proxy-smoky.vercel.app/api/proxy'
 
-if (!GOOGLE_ACCESS_TOKEN || !API_BASE_URL) {
-  console.error('Missing required environment variables:')
-  if (!GOOGLE_ACCESS_TOKEN) console.error('  GOOGLE_ACCESS_TOKEN')
-  if (!API_BASE_URL) console.error('  API_BASE_URL')
+if (!GOOGLE_ACCESS_TOKEN) {
+  console.error('Missing required environment variable: GOOGLE_ACCESS_TOKEN')
   console.error('\nUsage:')
-  console.error('  GOOGLE_ACCESS_TOKEN="..." API_BASE_URL="..." npx tsx scripts/regenerate-embeddings.ts')
+  console.error('  GOOGLE_ACCESS_TOKEN="..." npx tsx scripts/regenerate-embeddings.ts')
   process.exit(1)
 }
 
@@ -86,17 +83,21 @@ async function updateJson(fileId: string, content: unknown): Promise<void> {
 }
 
 async function getEmbedding(text: string): Promise<number[]> {
-  const res = await fetch(`${API_BASE_URL}/api/embed`, {
+  const res = await fetch(PROXY_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${GOOGLE_ACCESS_TOKEN}`,
     },
-    body: JSON.stringify({ text }),
+    body: JSON.stringify({
+      provider: 'google',
+      endpoint: 'models/gemini-embedding-001:embedContent',
+      body: { content: { parts: [{ text }] } },
+    }),
   })
-  if (!res.ok) throw new Error(`Embed API ${res.status}: ${await res.text()}`)
+  if (!res.ok) throw new Error(`Proxy ${res.status}: ${await res.text()}`)
   const data = await res.json()
-  return data.embedding
+  return data.embedding?.values
 }
 
 async function main() {
@@ -123,7 +124,6 @@ async function main() {
         continue
       }
 
-      // Check if embedding already exists
       const metadata = await readJson<Record<string, unknown>>(metadataId)
       if (Array.isArray(metadata.embedding) && metadata.embedding.length > 0) {
         console.log(`  [SKIP] ${folder.name} — already has embedding`)
@@ -131,11 +131,9 @@ async function main() {
         continue
       }
 
-      // Read content and generate embedding
       const content = await readText(contentId)
       const embedding = await getEmbedding(content)
 
-      // Update metadata with embedding
       metadata.embedding = embedding
       await updateJson(metadataId, metadata)
 

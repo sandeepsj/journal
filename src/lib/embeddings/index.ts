@@ -1,10 +1,9 @@
 import { findFileInFolder, readJsonFile, updateJsonFile } from '@/lib/drive/client'
+import { llmProxy } from '@/lib/llm-proxy'
 import type { EntryMetadata } from '@/lib/drive/entries'
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || ''
-
 /**
- * Call the Vercel proxy to generate an embedding, then update the
+ * Generate an embedding via the centralized LLM proxy, then update the
  * metadata.json file inside the entry folder with the embedding.
  *
  * Designed to be called fire-and-forget after save.
@@ -14,23 +13,18 @@ export async function generateAndStoreEmbedding(
   folderId: string,
   text: string
 ): Promise<void> {
-  if (!API_BASE || !text.trim()) return
+  if (!text.trim()) return
 
-  // 1. Generate embedding via Vercel proxy
-  const embedRes = await fetch(`${API_BASE}/api/embed`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${accessToken}`,
-    },
-    body: JSON.stringify({ text }),
-  })
+  // 1. Generate embedding via centralized proxy (Gemini)
+  const res = await llmProxy(
+    'google',
+    'models/gemini-embedding-001:embedContent',
+    { content: { parts: [{ text }] } },
+    accessToken
+  )
 
-  if (!embedRes.ok) {
-    throw new Error(`Embedding API error: ${embedRes.status}`)
-  }
-
-  const { embedding } = await embedRes.json()
+  const data = await res.json()
+  const embedding = data.embedding?.values
   if (!embedding || !Array.isArray(embedding)) return
 
   // 2. Find and update metadata.json with the embedding

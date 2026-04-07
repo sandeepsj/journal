@@ -3,10 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { loadAllEmbeddings } from '@/lib/drive'
 import { findSimilar, type EmbeddedEntry } from '@/lib/search/cosine'
+import { llmProxy } from '@/lib/llm-proxy'
 import { AIRecallCard } from './AIRecallCard'
 import { LoadingDots } from '@/components/ui/LoadingDots'
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL || ''
 
 export interface Citation {
   id: string
@@ -95,7 +94,7 @@ export function RecallChatPanel({ sessionId, initialMessages, onSessionCreated, 
   async function handleSubmit(e: FormEvent | React.KeyboardEvent) {
     e.preventDefault()
     const q = query.trim()
-    if (!q || isStreaming || !accessToken || !API_BASE) return
+    if (!q || isStreaming || !accessToken) return
 
     const userMessage: ChatMessage = { role: 'user', content: q }
     setMessages((prev) => [...prev, userMessage])
@@ -113,17 +112,16 @@ export function RecallChatPanel({ sessionId, initialMessages, onSessionCreated, 
         embeddingsRef.current = await loadAllEmbeddings(accessToken)
       }
 
-      // 2. Embed the query via Vercel proxy
-      const embedRes = await fetch(`${API_BASE}/api/embed`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({ text: q }),
-      })
-      if (!embedRes.ok) throw new Error('Failed to embed query')
-      const { embedding: queryEmbedding } = await embedRes.json()
+      // 2. Embed the query via centralized LLM proxy
+      const embedRes = await llmProxy(
+        'google',
+        'models/gemini-embedding-001:embedContent',
+        { content: { parts: [{ text: q }] } },
+        accessToken
+      )
+      const embedData = await embedRes.json()
+      const queryEmbedding = embedData.embedding?.values
+      if (!queryEmbedding) throw new Error('Failed to embed query')
 
       // 3. Find similar entries via cosine similarity
       const similar = findSimilar(queryEmbedding, embeddingsRef.current, 5)
@@ -143,18 +141,30 @@ export function RecallChatPanel({ sessionId, initialMessages, onSessionCreated, 
         return next
       })
 
-      // 4. Send context to /api/recall for AI answer
+      // 4. Send context to Claude for AI answer via centralized proxy
       const context = similar.map((s) => ({ title: s.title, body: s.body }))
-      const recallRes = await fetch(`${API_BASE}/api/recall`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`,
+      const contextBlock = context
+        .map((c, i) => `--- Entry ${i + 1}: "${c.title}" ---\n${c.body}`)
+        .join('\n\n')
+
+      const recallRes = await llmProxy(
+        'anthropic',
+        'messages',
+        {
+          model: 'claude-sonnet-4-6',
+          max_tokens: 1024,
+          system: 'You are a thoughtful journal companion. The user is asking a question about their past journal entries. Answer warmly and personally, referencing specific entries when relevant. If the context doesn\'t contain relevant information, say so honestly.',
+          messages: [
+            {
+              role: 'user',
+              content: `Here are my relevant journal entries:\n\n${contextBlock}\n\nMy question: ${q}`,
+            },
+          ],
         },
-        body: JSON.stringify({ query: q, context }),
-      })
-      if (!recallRes.ok) throw new Error('Recall failed')
-      const { answer } = await recallRes.json()
+        accessToken
+      )
+      const recallData = await recallRes.json()
+      const answer = recallData.content?.[0]?.text || 'I could not generate a response.'
 
       // Create a session ID for new conversations
       if (!sessionId) {
