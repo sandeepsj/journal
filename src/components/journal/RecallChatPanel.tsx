@@ -250,9 +250,9 @@ export function RecallChatPanel({ sessionId, initialMessages, onSessionCreated, 
                   </div>
                 )}
 
-                <div className={`max-w-[85%] ${msg.role === 'user' ? 'rounded-2xl rounded-tr-sm px-4 py-3 bg-[var(--color-accent)] text-white text-base leading-relaxed' : 'text-[var(--color-text-primary)] leading-relaxed'}`}>
+                <div className={`max-w-[85%] ${msg.role === 'user' ? 'rounded-2xl rounded-tr-sm px-4 py-3 bg-[var(--color-accent)] text-white text-base leading-relaxed font-sans' : 'text-[var(--color-text-primary)] leading-relaxed'}`}>
                   {msg.role === 'user' ? (
-                    <p className="whitespace-pre-wrap">{msg.content}</p>
+                    <p className="whitespace-pre-wrap font-sans">{msg.content}</p>
                   ) : (
                     <div>
                       {msg.content ? (
@@ -320,7 +320,7 @@ export function RecallChatPanel({ sessionId, initialMessages, onSessionCreated, 
               }
             }}
             placeholder="Ask your journal anything… (Enter to send)"
-            className="flex-1 bg-transparent border-none outline-none ring-0 focus:outline-none focus:ring-0 resize-none text-base text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] py-0.5"
+            className="flex-1 bg-transparent border-none outline-none ring-0 focus:outline-none focus:ring-0 resize-none text-base font-sans text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] py-0.5"
             rows={1}
             style={{ maxHeight: '8rem' }}
             disabled={isStreaming}

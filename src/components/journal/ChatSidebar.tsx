@@ -42,7 +42,7 @@ export function ChatSidebar({
         }`}
       >
         <div className="px-4 pt-4 pb-0">
-          <a href="/" className="inline-flex items-center gap-1.5 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors text-sm font-medium mb-3">
+          <a href="/#/" className="inline-flex items-center gap-1.5 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors text-sm font-sans font-medium mb-3">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
@@ -85,7 +85,7 @@ export function ChatSidebar({
                   setMobileSidebarOpen(false)
                 }}
               >
-                <div className="truncate text-sm font-medium">{session.title}</div>
+                <div className="truncate text-sm font-sans font-medium">{session.title}</div>
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
