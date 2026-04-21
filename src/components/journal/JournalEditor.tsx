@@ -369,18 +369,24 @@ export function JournalEditor({
                 <FormattingToolbar editorRef={editorRef} />
                 <div className="w-px h-5 bg-[var(--color-border)]" />
                 <div className="flex items-center gap-1">
-                  {['.', ',', '?', '!'].map((char) => (
+                  {[
+                    { label: '.', value: '.', aria: 'Insert .' },
+                    { label: ',', value: ',', aria: 'Insert ,' },
+                    { label: '?', value: '?', aria: 'Insert ?' },
+                    { label: '!', value: '!', aria: 'Insert !' },
+                    { label: '␣', value: ' ', aria: 'Insert space' },
+                  ].map(({ label, value, aria }) => (
                     <button
-                      key={char}
+                      key={aria}
                       type="button"
                       onPointerDown={(e) => {
                         e.preventDefault()
-                        editorRef.current?.insertAtCursor(char)
+                        editorRef.current?.insertAtCursor(value)
                       }}
-                      aria-label={`Insert ${char}`}
+                      aria-label={aria}
                       className="w-8 h-8 rounded-lg text-sm font-mono font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-muted)] border border-[var(--color-border)] transition-colors duration-150 flex items-center justify-center"
                     >
-                      {char}
+                      {label}
                     </button>
                   ))}
                 </div>
